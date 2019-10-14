@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="HibJTAIntraSEC" transaction-type="JTA">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <jta-data-source>jdbc/fbxaintrasec</jta-data-source>
+    <class>org.ifeth.sehr.intrasec.entities.AccUsrlog</class>
+    <class>org.ifeth.sehr.intrasec.entities.AclPermissions</class>
+    <class>org.ifeth.sehr.intrasec.entities.AclRolePerms</class>
+    <class>org.ifeth.sehr.intrasec.entities.AclRoles</class>
+    <class>org.ifeth.sehr.intrasec.entities.AclUserPerms</class>
+    <class>org.ifeth.sehr.intrasec.entities.AclUserRoles</class>
+    <class>org.ifeth.sehr.intrasec.entities.AdrMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.DefCategory</class>
+    <class>org.ifeth.sehr.intrasec.entities.DefContact</class>
+    <class>org.ifeth.sehr.intrasec.entities.DefModule</class>
+    <class>org.ifeth.sehr.intrasec.entities.DefOptions</class>
+    <class>org.ifeth.sehr.intrasec.entities.EhrComp</class>
+    <class>org.ifeth.sehr.intrasec.entities.EhrCont</class>
+    <class>org.ifeth.sehr.intrasec.entities.EhrMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.GenValues</class>
+    <class>org.ifeth.sehr.intrasec.entities.LcCad</class>
+    <class>org.ifeth.sehr.intrasec.entities.LcMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.NetCenter</class>
+    <class>org.ifeth.sehr.intrasec.entities.NetServices</class>
+    <class>org.ifeth.sehr.intrasec.entities.NetZones</class>
+    <class>org.ifeth.sehr.intrasec.entities.NotePosts</class>
+    <class>org.ifeth.sehr.intrasec.entities.OrgMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.UsrContact</class>
+    <class>org.ifeth.sehr.intrasec.entities.UsrMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.UsrPpp</class>
+    <class>org.ifeth.sehr.intrasec.entities.UsrRelship</class>
+    <class>org.ifeth.sehr.intrasec.entities.UsrServices</class>
+    <class>org.ifeth.sehr.intrasec.entities.PatMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.PrsMain</class>
+    <class>org.ifeth.sehr.intrasec.entities.PrsRelship</class>
+    <class>org.ifeth.sehr.intrasec.entities.PrsContact</class>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    <properties>
+      <property name="hibernate.show_sql" value="false"/>
+      <property name="hibernate.format_sql" value="false"/>
+      <property name="hibernate.cache.provider_class" value="org.hibernate.cache.NoCacheProvider"/>
+      <property name="hibernate.dialect" value="org.ifeth.sehr.intrasec.lib.Firebird21Dialect"/>
+      <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform" />
+      <!-- connection predefined by glassfish-resources.xml, using also fb alias.conf
+      <property name="hibernate.connection.url" value="jdbc:firebirdsql:127.0.0.1/3050:intrasec"/>
+      <property name="hibernate.connection.username" value="SYSDBA"/>
+      <property name="hibernate.connection.password" value="masterkey"/>
+      -->
+    </properties>
+  </persistence-unit>
+</persistence>

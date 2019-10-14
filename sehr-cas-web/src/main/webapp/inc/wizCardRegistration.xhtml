@@ -1,0 +1,289 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <style>
+      .lifecard {
+        background-image: url('resources/images/LifeCard-V8.png') !important;
+      }
+      .column20{width:20%;height:auto;}
+      .column60{width:60%;height:auto;}
+      .column80{width:80%;height:auto;}
+      .column100{width:100%;height:auto;}
+      .noTDborder td {border-style: hidden !important;}
+    </style>
+    <p:panel header="LifeCard(R) Registration" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{cardRegCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmCardRegWiz">
+        <p:growl id="grwlCardRegWiz" life="2000" showDetail="true" />
+
+        <p:wizard flowListener="#{cardRegCtrl.onFlowProcess}">
+          <p:tab id="tbHolder" title="Card Holder">
+            <p:panel header="Card Holder">
+              <p:messages />
+              <h:panelGrid columns="2" columnClasses="label, value">
+                <h:outputText value="Firstname: *" />
+                <p:inputText value="#{cardRegCtrl.lcMain.firstname}" required="true" label="Firstname"/>
+
+                <h:outputText value="Middle:" />
+                <p:inputText value="#{cardRegCtrl.lcMain.middle}" label="Middle"/>
+
+                <h:outputText value="Lastname: *" />
+                <p:inputText value="#{cardRegCtrl.lcMain.surname}" required="true" label="Lastname"/>
+
+                <h:outputText value="DoB (yyyy-MM-yy): *" />
+                <p:calendar value="#{cardRegCtrl.lcMain.dob}" 
+                            navigator="true" yearRange="c-150:c+0"
+                            showOn="button" mask="true"                            
+                            pattern="yyyy-MM-dd" timeZone="Europe/Berlin" 
+                            required="true" />
+
+                <h:outputText value="Skip to confirmation: " />
+                <h:selectBooleanCheckbox value="#{cardRegCtrl.skip}" />
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbPatientAssignment" title="Assignment">
+            <p:panel header="Managed Care Assignment">
+              <p:messages />
+              <h:panelGrid id="pnlPatientAssignment" columns="2" columnClasses="grid, grid">
+                <p:panelGrid columns="3" styleClass="noTDborder">
+                  <p:column>
+                    <h:outputText value="SHID:" />
+                  </p:column>
+                  <p:column>
+                    <p:autoComplete id="fldHostID" dropdown="true" 
+                                    forceSelection="true"
+                                    value="#{cardRegCtrl.lcMain.hostid}" 
+                                    completeMethod="#{cardRegCtrl.cplHostID}" 
+                                    style="width: 80%;"
+                                    size="14"/>
+                  </p:column>
+                  <p:column></p:column>
+
+                  <p:column>
+                    <h:outputText value="EHN:" />
+                  </p:column>
+                  <p:column>
+                    <h:outputText value="#{cardRegCtrl.lcMain.EHNDomain}" styleClass="outputLabel"/>
+                  </p:column>
+                  <p:column></p:column>
+
+                  <h:outputText value="Country:" />
+                  <h:outputText value="#{cardRegCtrl.lcMain.country}" styleClass="outputLabel"/>
+                  <p:column></p:column>
+
+                  <h:outputText value="Zone ID:" />
+                  <p:autoComplete id="fldZoneSelect" 
+                                  maxResults="10" minQueryLength="1"
+                                  value="#{cardRegCtrl.netZones}"
+                                  dropdown="true" 
+                                  var="netZones"
+                                  completeMethod="#{cardRegCtrl.cplZoneId}"
+                                  itemValue="#{netZones}"
+                                  itemLabel="#{netZones.zoneid}"
+                                  forceSelection="true"
+                                  converter="NetZonesConverter"
+                                  size="7" maxlength="7"
+                                  >
+                    <p:column>
+                      <h:outputText value="#{netZones.title}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{netZones.zoneid}" />
+                    </p:column>
+                    <p:ajax event="itemSelect" 
+                            listener="#{cardRegCtrl.handleZoneSelect}" 
+                            update="grwlCardRegWiz pnlPatientAssignment"/>
+                    <!-- f:converter converterId="NetZonesConverter"/ -->
+                  </p:autoComplete>
+                  <p:column></p:column>
+
+                  <h:outputText value="Center ID:" />
+                  <p:autoComplete id="fldCenterSelect" 
+                                  maxResults="10" minQueryLength="1"
+                                  value="#{cardRegCtrl.netCenter}"
+                                  dropdown="true" 
+                                  var="netCenter"
+                                  completeMethod="#{cardRegCtrl.cplCenterId}"
+                                  itemValue="#{netCenter}"
+                                  itemLabel="#{netCenter.netCenterPK.centerid}"
+                                  forceSelection="true"
+                                  converter="NetCenterConverter"
+                                  size="7" maxlength="7"> 
+                    <p:column>
+                      <h:outputText value="#{netCenter.name}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{netCenter.netCenterPK.centerid}" />
+                    </p:column>>
+                    <p:ajax event="itemSelect" listener="#{cardRegCtrl.handleCenterSelect}" 
+                            update="grwlCardRegWiz pnlPatientAssignment"/>
+                  </p:autoComplete>
+                  <p:column></p:column>
+
+                  <h:outputLabel for="fldPatientID" value="Patient ID: *" />
+                  <p:inputText id="fldPatientID"
+                               value="#{cardRegCtrl.lcMain.patid}" 
+                               required="true" label="Patient ID"
+                               size="8" maxlength="8"
+                               />
+                  <p:commandButton actionListener="#{cardRegCtrl.alCheckPatIdent}" 
+                                   icon="ui-icon-bookmark" 
+                                   update="grwlCardRegWiz" 
+                                   oncomplete="alert('Request sent...');">
+                    <f:setPropertyActionListener value="#{cardRegCtrl.lcMain}" target="#{cardRegCtrl.lcMain}" />
+                  </p:commandButton>
+
+                  <h:outputText value="Skip to confirmation: " />
+                  <h:selectBooleanCheckbox value="#{cardRegCtrl.skip}" />
+                  <p:column></p:column>
+
+                </p:panelGrid>
+
+                <p:panel style="margin-left:50px;">
+                  <p style="font-size:11pt;color:black;">
+                    The SHID (SEHR Host ID) is used by the SEHR Directory 
+                    Services to link hosts offering SEHR services. 
+                    This value should not be changed.<br/>
+                    The <b>EHN</b> (electronic health network) and <b>country</b> 
+                    values depend on the zone settings and cannot be changed.
+                  </p>
+                  <ol>
+                    <li>Select the zone (health care community) that manages the 
+                      patient and that is managed by this host. Do not use another 
+                      zone without knowledge about it's centers.</li>
+                    <li>Select a center of the zone that is responsible for the 
+                      clinical pathway of the patient and that has an EHR 
+                      base with an unique ID of the patient.</li>
+                    <li>Type in the patient ID of the EHR base using a written 
+                      form. Alternatively, a request for the number (ID) can be 
+                      done using surname, firstname and DoB from the first tab. 
+                      The center must be 'online' and connected to the 
+                      messaging service of the zone).</li>
+                  </ol>
+                </p:panel>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbCardPrinting" title="Card Personalization">
+            <p:panel header="Card Personalization (Printing Data)">
+              <p:messages />
+              <h:panelGrid id="fldCardPrinting" columns="2" columnClasses="grid, grid">
+
+                <h:panelGrid columns="2" columnClasses="label, value">
+
+                  <h:outputText value="Disease (ICD10 coded)" />
+                  <p:inputText id="fldProblem" 
+                               value="#{cardRegCtrl.lcItem.problem}" 
+                               label="Disease (ICD10 coded)"/>
+
+                  <h:outputText value="Identification" />
+                  <p:selectOneMenu id="fldIdentityType" 
+                                   value="#{cardRegCtrl.keyValueItem}"
+                                   var="kvi"
+                                   converter="IdentityTypeConverter" >
+                    <f:selectItems value="#{cardRegCtrl.listIdentTypes}"
+                                   var="kvi" itemLabel="#{kvi.value}" itemValue="#{kvi}"
+                                   />
+                    <p:column>
+                      <h:outputText value="#{kvi.value}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{kvi.key}" />
+                    </p:column>
+                  </p:selectOneMenu>
+
+                  <h:outputText value="Identification Number" />
+                  <p:inputText id="fldIdentityNumber" 
+                               value="#{cardRegCtrl.lcItem.identNo}" 
+                               label="Identification Number"/>
+
+                  <h:outputText value="ICE Contact name" />
+                  <p:inputText id="fldEMConFQName" 
+                               value="#{cardRegCtrl.lcItem.EMConFQName}" 
+                               label="ICE Contact name"/>
+
+                  <h:outputText value="ICE Contact Phone" />
+                  <p:inputText id="fldEMConPhone" 
+                               value="#{cardRegCtrl.lcItem.EMConPhone}" 
+                               label="ICE Contact Phone"/>
+
+                </h:panelGrid>
+                <p:panel style="margin-left:50px;">
+                  <p:graphicImage value="#{cardRegCtrl.cardImage}" rendered="#{not empty cardRegCtrl.lcItem.identNo}"/>
+                  <br/>
+                  * TODO: card image *
+                </p:panel>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbCardProvider" title="Card App">
+            <p:panel header="Card App (Provider)">
+              <p:messages />
+              <h:panelGrid id="fldCardProvider" columns="2" columnClasses="grid, grid">
+
+                <h:panelGrid columns="2" columnClasses="label, value">
+
+                  <h:outputText value="AppToken/Provider" />
+                  <p:inputText id="fldAppToken" 
+                               value="#{cardRegCtrl.lcCad.cai}" 
+                               label="AppToken/Provider"/>
+                </h:panelGrid>
+                <p:panel style="margin-left:50px;">
+                  * TODO: help content *
+                </p:panel>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbConfirm" title="Confirmation">
+            <p:panel header="Confirmation">
+              <h:panelGrid id="confirmation" columns="3" columnClasses="grid,grid,grid">
+                <h:panelGrid columns="2" columnClasses="label, value">
+                  <h:outputText value="Firstname: " />
+                  <h:outputText value="#{cardRegCtrl.lcMain.firstname}" styleClass="outputLabel"/>
+
+                  <h:outputText value="Lastname: " />
+                  <h:outputText value="#{cardRegCtrl.lcMain.surname}" styleClass="outputLabel"/>
+
+                  <h:outputText value="Age: " />
+                  <h:outputText value="#{cardRegCtrl.lcMain.dob}" styleClass="outputLabel">
+                    <f:convertDateTime pattern="yyyy-MM-dd" timeZone="Europe/Berlin"/>
+                  </h:outputText>
+                </h:panelGrid>
+                
+                <h:panelGrid columns="2" columnClasses="label, value">
+                  <h:outputText value="Number " />
+                  <h:outputText value="#{cardRegCtrl.lcItem.lcPrintnumber}" styleClass="outputLabel"/>
+
+                  <h:outputText value="ICE Name " />
+                  <h:outputText value="#{cardRegCtrl.lcItem.EMConFQName}" styleClass="outputLabel"/>
+
+                  <h:outputText value="ICE Phone " />
+                  <h:outputText value="#{cardRegCtrl.lcItem.EMConPhone}" styleClass="outputLabel">
+                    <f:convertDateTime pattern="yyyy-MM-dd" timeZone="Europe/Berlin"/>
+                  </h:outputText>
+                </h:panelGrid>
+
+                <p:commandButton value="Submit" 
+                                 actionListener="#{cardRegCtrl.onSaveLcMain()}" 
+                                 update="grwlCardRegWiz" process="@this"/>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+        </p:wizard>
+      </h:form>
+    </p:panel>
+  </html>
+</ui:composition>

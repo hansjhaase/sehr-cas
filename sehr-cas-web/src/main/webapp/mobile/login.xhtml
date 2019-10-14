@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pm="http://primefaces.org/mobile">
+
+  <f:view renderKitId="PRIMEFACES_MOBILE" />
+
+  <h:head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+
+    <link rel="stylesheet" href="../resources/style/myjmed.min.css" />
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.icons.min.css" />
+
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.structure-1.4.5.min.css" />
+    <script src="../lib/jquery-1.11.1.min.js"></script>
+    <script src="../lib/jquery.mobile-1.4.5.min.js"></script>
+    <!-- script src="../lib/jquery.mobile-1.4.5.min.map"></script -->
+
+    <style>
+      .overlayMenuTitle {
+        font-size: 1.2em;
+        color: black;
+      }
+    </style>
+
+  </h:head>
+
+  <h:body >
+    <script type="text/javascript">
+      window.addEventListener("load", function () {
+        // Set a timeout...
+        setTimeout(function () {
+          //alert('loading...');
+          // Hide the address bar!
+          window.scrollTo(0, 1);
+        }, 0);
+      });
+
+    </script>
+    <h:form id="frmMobileLogin">
+      <pm:page id="vwLogin" swatch="a" >
+        <pm:header title="SEHR Admin" fixed="true">
+        </pm:header>
+        <pm:content>        
+          <div style="width: 100%; height: 100%; position: relative; text-align: center;">
+            <img src="../resources/images/sehr-jmed-cloud-transparent.png" alt=""/>
+          </div>
+          <p:growl id="msgMobileLogin" showDetail="false" autoUpdate="true" life="500"/>
+          <p:outputPanel id="pnlLoginData" rendered="#{moduleCtrl.loginMobileAllowed}">
+            <p:inputText id="fldUsername" value="#{mobileControl.username}" 
+                         label="Username" required="true"/>
+            <p:message for="fldUsername" display="text" />  
+            <p:password id="fldPassword" value="#{mobileControl.password}" 
+                        label="Password" required="true"/>
+            <p:message for="fldPassword" display="text" />  
+            <p:commandButton value="Login" action="#{mobileControl.doLogin}" 
+                         update="msgMobileLogin pnlLoginData"/>
+          </p:outputPanel>
+          <h:outputText rendered="#{not moduleCtrl.loginMobileAllowed}" value="Login disabled. Contact Administrator for assistance."/>
+        </pm:content>
+
+      </pm:page>
+    </h:form>      
+
+  </h:body>
+
+</html>

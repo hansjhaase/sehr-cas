@@ -1,0 +1,330 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+    <p:panel header="Zone Administration" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{zoneViewCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewZones">
+        <p:growl id="grwlViewZones" life="4000" escape="false" showDetail="true" />
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="Add" 
+                             actionListener="#{zoneViewCtrl.doPrepareNewZoneObject}" 
+                             icon="ui-icon-document" 
+                             update="grwlViewZones :frmViewZones:dlgEditZone" 
+                             oncomplete="PF('widEditZone').show();"/> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:commandButton type="button" title="Zones" icon="ui-icon-disk" />
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" actionListener="#{zoneViewCtrl.doPrepareNewZoneObject}" 
+                          update="grwlViewZones :frmViewZones:dlgEditZone" 
+                          oncomplete="PF('widEditZone').show();" icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" 
+                          action="#{zoneViewCtrl.actionClose}" update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+        <!--
+        <h2>Zones (Health Communities)</h2>
+        -->
+        <p class="notered" >
+          Not yet fully implemented.
+        </p>
+        <p>Local zone ID is <h:outputText value="#{moduleCtrl.localZoneID}"/>.
+          The following list of zones are bound (linked) to this zone. 
+          If activated, this zone can send/receive 
+          messages with other communities of care using the SEHR XNET infrastructure.
+        </p>
+        <p:dataTable id="dataViewZones" value="#{zoneViewCtrl.registeredZones}" 
+                     var="zone" 
+                     paginator="true" paginatorPosition="bottom" rows="10">
+          <p:column style="width:16px;">
+            <p:rowToggler />
+          </p:column>
+          <p:column headerText="ZID" width="10%">
+            <h:outputText value="#{zone.zoneid}" />
+          </p:column>
+
+          <p:column headerText="Title / Healthnet">
+            <h:outputText value="#{zone.title}" /><br/>
+            <h:outputText value="#{zone.domname}" /><br/>
+          </p:column>
+
+          <p:column headerText="Link" width="30%">
+            <p:outputPanel rendered="#{zoneViewCtrl.isPublic(zone)}">
+              <h:outputLink value="http://#{fn:trim(zone.priip)}:8080/sehr-cas-web/" target="_blank">
+                #{zone.fqnn} (HTTP/8080)
+              </h:outputLink><br/> 
+              <h:outputLink value="https://#{fn:trim(zone.priip)}:8181/sehr-cas-web/" target="_blank">
+                #{zone.fqnn} (HTTPS/8181)
+              </h:outputLink><br/> 
+              <h:outputLink value="http://#{fn:trim(zone.vpnip)}:8080/sehr-cas-web/" target="_blank" rendered="#{zone.vpnip != null}">
+                #{zone.fqnn} (VPN/8080)
+              </h:outputLink>
+            </p:outputPanel>
+            <h:outputText value="- private zone -" rendered="#{not zoneViewCtrl.isPublic(zone)}" />
+          </p:column>
+          <!--
+          <p:column headerText="GUID" width="10%">
+            <h:outputText value="n/a" />
+          </p:column>
+          -->
+          <p:column id="colStatusPublic" headerText="" width="18" style="padding:1px;">
+            <p:graphicImage library="images" name="important16x16.png" 
+                            title="No public key! Messages to/from this zone can't be validated!" 
+                            rendered="#{not zoneViewCtrl.hasPublicKey(zone)}"/>
+          </p:column>
+          <p:column id="colStatusWEB" headerText="" width="18" style="padding:1px;">
+            <p:outputPanel rendered="#{not zoneViewCtrl.isLocalZone(zone.zoneid)}">
+              <p:graphicImage library="images" name="#{empty(fn:trim(zone.priip))?'cancel16x16.png':'important16x16.png'}" 
+                              title="#{empty(fn:trim(zone.priip))?'No IP address! Check configuration.':'No access to '.concat(fn:trim(zone.priip)).concat(':8080/sehr-cas-web')}" 
+                              rendered="#{empty(zone.priip) or not zoneViewCtrl.isSEHRWeb(zone)}"/>
+            </p:outputPanel>
+            <p:outputPanel rendered="#{zoneViewCtrl.isLocalZone(zone.zoneid)}">
+              <p:graphicImage library="images" name="home_16x16.png" 
+                              title="Local zone..." />
+            </p:outputPanel>
+          </p:column>
+          <p:column id="colStatusMonitor" headerText="" width="18" style="padding:1px;">
+            <p:graphicImage library="images" name="#{zoneViewCtrl.getStatusImgMonitor(zone)}" 
+                            title="#{zoneViewCtrl.getStatusMonitor(zone)}"/>
+          </p:column>
+          <p:column width="150">
+            <p:commandButton update=":frmViewZones:dlgEditZone" 
+                             oncomplete="PF('widEditZone').show()" 
+                             icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{zone}" target="#{zoneViewCtrl.zoneObject}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewCenters.xhtml')}"
+                             update=":ws_content" icon="ui-icon-home" title="Center of this zone...">
+              <f:setPropertyActionListener value="#{zone}" target="#{sessionControl.zoneObject}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewServices.xhtml')}"
+                             update=":ws_content" icon="ui-icon-script" 
+                             title="Registered Services at this zone...">
+              <f:setPropertyActionListener value="#{zone}" target="#{sessionControl.zoneObject}" />
+              <f:setPropertyActionListener value="#{null}" target="#{sessionControl.netCenter}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{zoneViewCtrl.doCheckRegistration(zone)}"
+                             update=":frmViewZones:grwlViewZones" 
+                             delay="500"
+                             icon="ui-icon-script" title="Check URL access, SEHR context entry and more...">
+            </p:commandButton>
+          </p:column>
+          <p:rowExpansion>
+            <div style="display: none;">
+              <div id="mapMarker#{zone.zoneid}" class="mapMarker" title="#{zone.title}"></div>
+            </div>
+            <div class="mapcontainer" style="float:right;">
+              <div id="map#{zone.zoneid}" class="map"></div>
+            </div>
+            <script>
+              var zoneLoc = '#{zoneViewCtrl.getGeoLocation(zone)}';
+              //console.log(zoneLoc);
+              if (zoneLoc.length === 0) {
+                $("#map" +#{zone.zoneid}).html("no geolocation data");
+              } else {
+                try {
+                  var oGeoLoc = JSON.parse(zoneLoc);
+                  var epsgGeoLoc = ol.proj.transform(
+                          [oGeoLoc.lon, oGeoLoc.lat], 'EPSG:4326', 'EPSG:3857');
+
+                  var map#{zone.zoneid} = new ol.Map({
+                    layers: [
+                      new ol.layer.Tile({source: new ol.source.OSM()})
+                    ],
+                    view: new ol.View({
+                      center: epsgGeoLoc,
+                      zoom: 16
+                    }),
+                    target: 'map#{zone.zoneid}'
+                  });
+
+                  var marker = new ol.Overlay({
+                    position: epsgGeoLoc,
+                    positioning: 'center-center',
+                    element: document.getElementById('mapMarker#{zone.zoneid}'),
+                    stopEvent: false
+                  });
+
+                  map#{zone.zoneid}.addOverlay(marker);
+                } catch (err) {
+                  $("#map" +#{zone.zoneid}).html("error processing geolocation data");
+                }
+              }
+            </script>
+            <!-- left site -->
+            <p>
+              <b>#{zone.title}</b><br/>
+              <u>Address</u><br/>
+              <h:outputText value="#{zoneViewCtrl.viewAddress(zone.respOrgAdrId)}" escape="false"/>              
+            </p>
+            <p:commandButton update=":frmViewZones:dlgEditRspAdrContact" 
+                             oncomplete="PF('widEditRspAdrContact').show()" 
+                             icon="ui-icon-pencil" title="Edit">
+              <!--f:setPropertyActionListener value="#{zone.respOrgAdrId}" target="#{zoneViewCtrl.respOrgAdrId}" / -->
+              <f:setPropertyActionListener value="#{zone}" target="#{zoneViewCtrl.zoneObject}" />
+            </p:commandButton>
+            <p:commandButton update=":frmViewZones:dlgEditGeolocation" 
+                             oncomplete="PF('widEditGeolocation').show()" 
+                             icon="ui-icon-pin-s" title="Loc" rendered="#{zone.respOrgAdrId gt 0}">
+              <!--f:setPropertyActionListener value="#{zone.respOrgAdrId}" target="#{zoneViewCtrl.respOrgAdrId}" / -->
+              <f:setPropertyActionListener value="#{zone}" target="#{zoneViewCtrl.zoneObject}" />
+            </p:commandButton>
+          </p:rowExpansion>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="Zone" widgetVar="widEditZone" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditZone" style="text-align:center;">
+            <f:facet name="header">
+              <h:outputText value="#{zoneViewCtrl.zoneObject.title} (#{zoneViewCtrl.zoneObject.zoneid})"/> 
+            </f:facet>
+
+            <p:outputPanel rendered="#{not zoneViewCtrl.isLocalZone(zoneViewCtrl.zoneObject.zoneid)}">
+              <p class="infobox">You are not allowed to edit external entries.</p>
+            </p:outputPanel>
+            <p:outputPanel rendered="#{zoneViewCtrl.isLocalZone(zoneViewCtrl.zoneObject.zoneid)}">
+
+              <p:panelGrid  columns="2" rendered="#{not empty zoneViewCtrl.zoneObject}" 
+                            columnClasses="label,value">
+
+                <h:outputLabel for="fldTitle" value="Titel" />
+                <p:inputText id="fldTitle" value="#{zoneViewCtrl.zoneObject.title}"/>
+
+                <h:outputLabel for="fldAdrMainResp" value="Responsible Person/Oraganization (Select)" />
+                <p:autoComplete id="fldAdrMainResp" dropdown="true" 
+                                forceSelection="true"
+                                value="#{zoneViewCtrl.adrResp}" 
+                                completeMethod="#{zoneViewCtrl.cplAdrResp}" 
+                                style="width: 80%;"
+                                size="10" var="adrMain" converter="converterAdrMain"
+                                itemLabel="#{adrMain.match}" itemValue="#{adrMain}"
+                                >
+                  <p:ajax event="itemSelect" listener="#{zoneViewCtrl.onAdrSelect}"
+                          update="grwlViewZones " />
+                </p:autoComplete>
+
+                <h:outputLabel for="fldBoS"  value="Start of Service:" />
+                <p:calendar id="fldBoS" value="#{zoneViewCtrl.zoneObject.startofservice}" 
+                            navigator="true" yearRange="c-10:c+10"
+                            showOn="button" mask="true"                            
+                            pattern="yyyy-MM-dd" timeZone="Europe/Berlin" 
+                            required="true" />
+                <h:outputLabel for="fldEoS"  value="End of Service: (blank=undefined)" />
+                <p:calendar id="fldEoS" value="#{zoneViewCtrl.zoneObject.endofservice}" 
+                            navigator="true" yearRange="c-10:c+10"
+                            showOn="button" mask="true"                            
+                            pattern="yyyy-MM-dd" timeZone="Europe/Berlin" 
+                            required="false" />
+
+                <p:commandButton value="Cancel" onclick="PF('widEditZone').hide()"/>
+                <p:commandButton value="Save" action="#{zoneViewCtrl.doSaveZoneObject}" 
+                                 onsuccess="PF('widEditZone').hide()" 
+                                 update=":frmViewZones:grwlViewZones :frmViewZones:dataViewZones"/>
+
+              </p:panelGrid>
+            </p:outputPanel>
+          </p:outputPanel>
+        </p:dialog>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="Contact" widgetVar="widEditRspAdrContact" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditRspAdrContact" style="text-align:center;">
+            <f:facet name="header">
+              <h:outputText value="#{zoneViewCtrl.adrResp.match}" rendered="#{not empty zoneViewCtrl.adrResp}"/> 
+            </f:facet>
+
+            <p:panelGrid  columns="2" rendered="#{not empty zoneViewCtrl.adrResp}" 
+                          columnClasses="label,value">
+
+              <h:outputLabel for="fldAdrMainTitle" value="Titel" />
+              <p:inputText id="fldAdrMainTitle" value="#{zoneViewCtrl.adrResp.title}"/>
+
+              <h:outputLabel for="fldAdrMainAdr1"  value="Adr 1:" />
+              <p:inputText id="fldAdrMainAdr1" value="#{zoneViewCtrl.adrResp.adr1}"/>
+              <h:outputLabel for="fldAdrMainAdr2"  value="Adr 2:" />
+              <p:inputText id="fldAdrMainAdr2" value="#{zoneViewCtrl.adrResp.adr2}"/>
+              <h:outputLabel for="fldAdrMainAdr3"  value="Adr 3:" />
+              <p:inputText id="fldAdrMainAdr3" value="#{zoneViewCtrl.adrResp.adr3}"/>
+
+              <h:outputLabel for="fldAdrMainStreet"  value="Street/Number:" />
+              <p:outputPanel>
+                <p:inputText id="fldAdrMainStreet" value="#{zoneViewCtrl.adrResp.street}"/>
+                <p:inputText id="fldAdrMainHN" value="#{zoneViewCtrl.adrResp.HN}" size="4" maxlength="6" />
+
+              </p:outputPanel>
+              
+              <h:outputLabel for="fldAdrMainZIP"  value="ZIP:" />
+              <p:inputText id="fldAdrMainZIP" value="#{zoneViewCtrl.adrResp.zip}" size="5" maxlength="6" />
+              <h:outputLabel for="fldAdrMainCity"  value="City:" />
+              <p:inputText id="fldAdrMainCity" value="#{zoneViewCtrl.adrResp.city}" />
+
+              <h:outputLabel for="fldAdrMainInfo"  value="Info:" />
+              <p:inputTextarea id="fldAdrMainInfo" rows="5" cols="60" value="#{zoneViewCtrl.adrResp.info}"/>
+
+              <p:outputPanel></p:outputPanel>
+              <p:outputPanel>
+                <p:commandButton value="Cancel" onclick="PF('widEditRspAdrContact').hide()"/>
+                <p:commandButton value="Save" action="#{zoneViewCtrl.doSaveRespAdr}" 
+                                 onsuccess="PF('widEditRspAdrContact').hide()" 
+                                 update=":frmViewZones:grwlViewZones :frmViewZones:dataViewZones"/>
+              </p:outputPanel>
+            </p:panelGrid>
+
+          </p:outputPanel>
+        </p:dialog>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="Location" widgetVar="widEditGeolocation" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditGeolocation" style="text-align:center;">
+            <f:facet name="header">
+              <h:outputText value="#{zoneViewCtrl.adrResp.match}" rendered="#{not empty zoneViewCtrl.adrResp}"/> 
+            </f:facet>
+
+            <p:panelGrid  columns="2" rendered="#{not empty zoneViewCtrl.adrResp}" 
+                          columnClasses="label,value">
+
+              <h:outputLabel for="fldAdrMainLon" value="Lon" />
+              <p:inputText id="fldAdrMainLon" value="#{zoneViewCtrl.adrResp.geolng}"/>
+
+              <h:outputLabel for="fldAdrMainLat" value="Lon" />
+              <p:inputText id="fldAdrMainLat" value="#{zoneViewCtrl.adrResp.geolat}"/>
+
+              <p:outputPanel>
+                <p:commandButton update="dlgEditGeolocation"
+                                 actionListener="#{zoneViewCtrl.searchGeoLocation(zoneViewCtrl.adrResp.adrid)}"
+                                 icon="ui-icon-home" value="Relocate by address" title="Research Location ..."/>
+              </p:outputPanel>
+              <p:outputPanel>
+                <p:commandButton value="Cancel" onclick="PF('widEditGeolocation').hide()"/>
+                <p:commandButton value="Save" action="#{zoneViewCtrl.doSaveRespAdr}" 
+                                 onsuccess="PF('widEditGeolocation').hide()" 
+                                 update=":frmViewZones:grwlViewZones :frmViewZones:dataViewZones"/>
+              </p:outputPanel>
+            </p:panelGrid>
+
+          </p:outputPanel>
+        </p:dialog>
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

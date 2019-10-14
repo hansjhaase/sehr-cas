@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+    <p:panel header="Modules/App Administration" closable="true" style="margin: 0; padding: 0;">
+      <p:ajax event="close" listener="#{moduleViewCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewModule">
+        <p:growl id="grwlViewModule" life="2000" />
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="New" 
+                             actionListener="#{moduleViewCtrl.prepareNewModule}" icon="ui-icon-document" 
+                             update="grwlViewModule :frmViewModule:dlgEditModule" 
+                             oncomplete="PF('widEditModule').show();"/> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:commandButton type="button" title="Services" icon="ui-icon-disk" />
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" actionListener="#{moduleViewCtrl.prepareNewModule}" update="grwlViewModule :frmViewModule:dlgEditModule" oncomplete="PF('widEditModule').show();" icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" action="#{moduleViewCtrl.actionClose}" update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+
+        <p class="notered" >
+          Not yet fully implemented.
+        </p>
+        <p>
+          Modules are applications handling EHR data. There are different types 
+          that depends on the devices / systems the modules are running on (have been build for).
+        </p>
+        <p:outputPanel rendered="#{moduleViewCtrl.fltNetServices!=null}">
+          <p>Module of service #{moduleViewCtrl.fltNetServices.title}</p>
+        </p:outputPanel>
+        <p:dataTable id="dataViewModule" value="#{moduleViewCtrl.registeredModules}" var="module" 
+                     paginator="true" paginatorPosition="bottom" rows="10">
+          <p:column style="width:16px;">
+            <p:rowToggler />
+          </p:column>
+          <p:column headerText="PIK">
+            <h:outputText value="#{module.pik}" />
+          </p:column>
+
+          <p:column headerText="Title">
+            <h:outputText value="#{module.title}" />
+          </p:column>
+
+          <p:column headerText="URL">
+            <h:outputLink value="#{module.url}" rendered="#{moduleViewCtrl.isHttp(module.url)}" target="_blank" >#{module.url}</h:outputLink>
+            <h:outputText value="#{module.url}" rendered="#{not moduleViewCtrl.isHttp(module.url)}" />
+          </p:column>
+
+          <p:column headerText="Type" style="width:96px;">
+            <p:graphicImage library="images" name="close16x16.png" title="n/a" rendered="#{module.type == 0}" />
+            <p:graphicImage library="images" name="close16x16.png" title="no GUI" rendered="#{module.type == 1}" />
+            <p:graphicImage library="images" name="display16x16.png" title="Desktop App" rendered="#{module.type == 2}" />
+            <p:graphicImage library="images" name="mobile16x16.png"  title="Android" rendered="#{module.type == 4}" />
+            <p:graphicImage library="images" name="mobile16x16.png" title="iOS" rendered="#{module.type == 8}" />
+            <p:graphicImage library="images" name="web16x16.png" rendered="#{module.type == 16}" />
+            <p:graphicImage library="images" name="LifeCard-V816x16.png" rendered="#{module.type == 32}" />
+            <h:outputText value=" (#{module.type})" />
+          </p:column>
+
+          <p:column headerText="Version">
+            <h:outputText value="#{module.modVersion}" />
+          </p:column>
+
+          <p:column style="width:64px;text-align: left">
+            <p:commandButton update=":frmViewModule:dlgEditModule" oncomplete="PF('widEditModule').show()" icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{module}" target="#{moduleViewCtrl.selModule}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewServices.xhtml')}"
+                             update=":ws_content" icon="ui-icon-script" title="Registered (known) services of the app...">
+              <f:setPropertyActionListener value="#{module}" target="#{serviceViewCtrl.selModule}" />
+            </p:commandButton>
+          </p:column>
+          <p:rowExpansion>
+            <p:column headerText="GUID">
+              <h:outputText value="#{module.guid}" />
+            </p:column>
+          </p:rowExpansion>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="Module/App" widgetVar="widEditModule" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditModule" style="text-align:center;">
+            <p:panelGrid  columns="2" rendered="#{not empty moduleViewCtrl.selModule}" columnClasses="label,value">
+              <f:facet name="header">
+                <h:outputText value="#{moduleViewCtrl.selModule.title}"/> 
+              </f:facet>
+
+              <h:outputLabel for="fldProducer" value="Producer/Developer" />
+              <p:selectOneMenu id="fldProducer" value="#{moduleViewCtrl.adrMain}"
+                               var="a" converter="converterAdrMain"
+                               style="width:150px">
+                <p:ajax event="change" listener="#{moduleViewCtrl.onAdrChange}" 
+                        update=":frmViewModule:grwlViewModule" />
+                <f:selectItem itemLabel="Select Address" itemValue="" noSelectionOption="true" />
+                <f:selectItems value="#{moduleViewCtrl.listAdrMain}"
+                               var="adrMain" itemLabel="#{adrMain.adr1}" itemValue="#{adrMain}"/>
+                <p:column>
+                  #{a.adr1}
+                </p:column>
+                <p:column>
+                  #{a.adrid}
+                </p:column>
+              </p:selectOneMenu>
+
+              <h:outputText value="PIK" />
+              <p:inputText value="#{moduleViewCtrl.selModule.pik}" />
+
+              <h:outputText value="Ident/Name:" />
+              <p:inputText value="#{moduleViewCtrl.selModule.name}"/>
+
+              <h:outputLabel for="fldTitle" value="Titel" />
+              <p:inputText id="fldTitle" value="#{moduleViewCtrl.selModule.title}" />
+
+              <h:outputLabel for="fldURL" value="URL" />
+              <p:inputText id="fldURL" value="#{moduleViewCtrl.selModule.url}" />
+
+              <h:outputLabel for="fldType" value="Type of App" />
+              <p:selectOneMenu id="fldType" value="#{moduleViewCtrl.selModule.type}" 
+                               style="width:150px">
+                <p:ajax listener="#{moduleViewCtrl.onTypeChange}" 
+                        update=":frmViewModule:grwlViewModule" />
+                <f:selectItem itemLabel="Select Type" itemValue="" noSelectionOption="true" />
+                <f:selectItems value="#{moduleViewCtrl.listTypes.entrySet()}"
+                               var="entry" itemLabel="#{entry.value}" itemValue="#{entry.key}"/>
+              </p:selectOneMenu>
+
+              <p:commandButton value="Cancel" onclick="PF('widEditModule').hide()"/>
+              <p:commandButton value="Save" 
+                               action="#{moduleViewCtrl.actionSaveModule}" 
+                               onsuccess="PF('widEditModule').hide()" 
+                               update=":frmViewModule:grwlViewModule :frmViewModule:dataViewModule"/>
+
+            </p:panelGrid>
+          </p:outputPanel>
+        </p:dialog>
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

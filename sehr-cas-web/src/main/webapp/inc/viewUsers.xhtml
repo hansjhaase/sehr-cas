@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <p:panel header="User Administration" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{userViewCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewUsers">
+        <p:growl id="grwlViewUsers" life="2000" />
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="Add" 
+                             actionListener="#{userViewCtrl.doPrepareNewUserObject}" 
+                             icon="ui-icon-document" 
+                             update="grwlViewUsers :frmViewUsers:dlgEditUser" 
+                             oncomplete="PF('widEditUser').show();"/> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:menuButton value="Filter">
+              <p:menuitem value="All Users" 
+                          actionListener="#{userViewCtrl.btnFltLifeCard(false)}" 
+                          update="grwlViewUsers :frmViewUsers:dataViewUsers" 
+                          icon="ui-icon-document" />
+              <p:menuitem value="LifeCARD Users" 
+                          icon="ui-icon-document" 
+                          action="#{userViewCtrl.btnFltLifeCard(true)}" 
+                          update="grwlViewUsers :frmViewUsers:dataViewUsers" 
+                          />
+            </p:menuButton>
+           
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:commandButton type="button" title="User" icon="ui-icon-disk" />
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" actionListener="#{userViewCtrl.doPrepareNewUserObject}" 
+                          update="grwlViewUsers :frmViewUsers:dlgEditUser" 
+                          oncomplete="PF('widEditUser').show();" icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" 
+                          action="#{userViewCtrl.actionClose}" update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+
+        <h2>Users</h2>
+        <p style="font-size: 0.8em;">
+          Not yet fully implemented.
+        </p>
+        <p:dataTable id="dataViewUsers" value="#{userViewCtrl.listUsers}" 
+                     var="usrMain" 
+                     paginator="true" paginatorPosition="bottom" rows="10">
+          <f:facet name="header">
+            Registered Users: ... #{fn:length(userViewCtrl.listUsers)}
+          </f:facet>
+          <p:column headerText="ID">
+            <h:outputText value="#{usrMain.usrid}" />
+          </p:column>
+
+          <p:column headerText="Login (usrname)">
+            <h:outputText value="#{usrMain.usrname}" />
+          </p:column>
+
+          <p:column headerText="Person">
+            <h:outputText value="#{usrMain.prsMain.toString()}" rendered="#{not empty usrMain.prsMain}" />
+            <h:outputText value="Missing person entry for use!" rendered="#{empty usrMain.prsMain}" />
+          </p:column>
+
+          <p:column style="width:64px;text-align: left">
+            <p:commandButton update=":frmViewUsers:dlgEditUser" 
+                             oncomplete="PF('widEditUser').show()" 
+                             icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{usrMain}" target="#{userViewCtrl.userObject}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewServices.xhtml')}"
+                             update=":ws_content" 
+                             icon="ui-icon-cloud" title="Services / Apps">
+              <f:setPropertyActionListener value="#{usrMain}" target="#{sessionControl.usrMain}" />
+            </p:commandButton>
+          </p:column>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="User" widgetVar="widEditUser" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditUser" style="text-align:center;">
+            <p:panelGrid  columns="2" rendered="#{not empty userViewCtrl.userObject}" 
+                          columnClasses="label,value">
+              <f:facet name="header">
+                <h:outputText value="#{userViewCtrl.userObject.toString()}"/> 
+              </f:facet>
+
+              <h:outputText value="Id:" />
+              <h:outputText value="#{userViewCtrl.userObject.usrid}" />
+
+              <h:outputLabel for="fldLastname" value="Lastname" />
+              <p:inputText id="fldLastname" value="#{userViewCtrl.userObject.prsMain.lastname}" />
+
+              <h:outputLabel for="fldFirstname" value="Firstname" />
+              <p:inputText id="fldFirstname" value="#{userViewCtrl.userObject.prsMain.firstname}" />
+
+              <p:commandButton value="Cancel" onclick="PF('widEditUser').hide()"/>
+              <p:commandButton value="Save" action="#{userViewCtrl.doSaveUserObject}" 
+                               onsuccess="PF('widEditUser').hide()" 
+                               update=":frmViewUsers:grwlViewUsers :frmViewUsers:dataViewUsers"/>
+
+            </p:panelGrid>
+          </p:outputPanel>
+        </p:dialog>
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

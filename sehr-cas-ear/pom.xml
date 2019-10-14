@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>sehr-cas</artifactId>
+    <groupId>org.ifeth.sehr.p1507291734</groupId>
+    <version>0.2</version>
+  </parent>
+
+  <groupId>org.ifeth.sehr.p1507291734</groupId>
+  <artifactId>sehr-cas-ear</artifactId>
+  <version>0.2</version>
+  <packaging>ear</packaging>
+
+  <name>sehr-cas-ear</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-ear-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+            <version>6</version>
+            <defaultLibBundleDir>lib</defaultLibBundleDir>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.ifeth.sehr.p1507291734</groupId>
+            <artifactId>sehr-cas-ejb</artifactId>
+            <version>0.2</version>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>org.ifeth.sehr.p1507291734</groupId>
+            <artifactId>sehr-cas-web</artifactId>
+            <version>0.2</version>
+            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>4.3.10.Final</version>
+        </dependency>
+    </dependencies>
+    <description>Merging sehr-saf(GF3) and sehr-saf-tool; based on SEHR core 6.4.x</description>
+</project>

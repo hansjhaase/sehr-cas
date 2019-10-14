@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pm="http://primefaces.org/mobile">
+
+  <f:view renderKitId="PRIMEFACES_MOBILE"  />
+  <f:metadata>
+    <f:viewAction action="#{mqControl.checkStatus}"/>
+  </f:metadata>
+
+  <h:head>
+    <!--
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+    -->
+    <link rel="stylesheet" href="../resources/style/myjmed.min.css" />
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.icons.min.css" />
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+    -->
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.structure-1.4.5.min.css" />
+    <script src="../lib/jquery-1.11.1.min.js"></script>
+    <script src="../lib/jquery.mobile-1.4.5.min.js"></script>
+    <!-- script src="../lib/jquery.mobile-1.4.5.min.map"></script -->
+
+  </h:head>
+
+  <h:body >
+
+    <!-- SEHR Zone Services Queue Monitor -->
+    <pm:page id="vwMonitor" title="SEHR Admin" swatch="a" >
+      <pm:header title="AMQ Connections">
+        <p:button outcome="pm:vwMQInfo" value="i" icon="ui-icon-info" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-left"/>              
+        <p:button outcome="/mobile/index" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmMQConnections">
+          <p:dataList id="dataClients" 
+                      value="#{mqControl.listMQClients(null)}" 
+                      var="client">
+            <p:commandLink action="#{mqControl.loadMQClient}">
+              <f:param name="conid" value="#{client.conIdAsString}"/>
+              <h:panelGroup>
+                <h:outputText value="#{mqControl.getSubStr(client.clientId,30)}" 
+                              style="display: inline-block;"/>
+              </h:panelGroup>
+            </p:commandLink>
+          </p:dataList>
+        </h:form>
+      </pm:content>
+
+    </pm:page>
+
+    <!--  MQ settings -->
+    <pm:page id="vwMQInfo" title="SEHR Admin" swatch="a" >
+      <pm:header title="AMQ Status">
+        <p:button outcome="pm:vwMonitor" value="Back" icon="ui-icon-arrow-l" 
+                  styleClass="ui-btn-left ui-btn-inline"/>
+      </pm:header>
+
+      <pm:content>
+        <p:panel header="Local Broker (Zone)">
+          <p style="font-size: 0.8em;font-weight: bold;">Zone ID</p> 
+          <h:outputText value="#{moduleCtrl.localZoneIDAsString}" style="font-weight: normal;"/>
+
+          <p style="font-size: 0.8em;font-weight: bold;">Connection Type</p> 
+          <h:outputText value="#{mqControl.MQBroker}" style="font-weight: normal;"/>
+
+          <p style="font-size: 0.8em;font-weight: bold;">Connected</p> 
+          <h:outputText value="#{mqControl.MQConSts}" style="font-weight: normal;"/>         
+        </p:panel>
+      </pm:content>
+      <pm:footer fixed="true">
+        <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+          (C)MDI GmbH <a href='mailto:info@mdigmbh.de' style='color:white;'>info@mdigmbh.de</a>
+        </p>
+      </pm:footer>
+    </pm:page>
+  </h:body>
+
+</html>

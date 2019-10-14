@@ -1,0 +1,5 @@
+**/CVS
+**/target
+**/class
+**/.cvsignore
+/sehr-cas-web/src/main/webapp/WEB-INF/SEHRAdminTool.properties

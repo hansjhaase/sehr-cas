@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+    <p:panel header="Services" closable="true" style="margin: 0; padding: 0;">
+      <p:ajax event="close" listener="#{serviceViewCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewService">
+        <p:growl id="grwlViewService" life="2000" />
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="New" 
+                             actionListener="#{serviceViewCtrl.prepareNewService}" icon="ui-icon-document" 
+                             update="grwlViewService :frmViewService:dlgEditService" 
+                             oncomplete="PF('widEditModule').show();"/> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:commandButton type="button" title="Modules" icon="ui-icon-disk" />
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" actionListener="#{serviceViewCtrl.prepareNewService}" 
+                          update="grwlViewService :frmViewService:dlgEditService" 
+                          oncomplete="PF('widEditService').show();" icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" action="#{serviceViewCtrl.actionClose}" 
+                          update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+
+        <p class="notered" >
+          Not yet fully implemented.
+        </p>
+        <p:outputPanel rendered="#{empty serviceViewCtrl.curNetZones}">
+          <p>
+            Services are applications (modules) handling and processing EHR data on 
+            this or other SEHR hosts. 
+          </p>
+        </p:outputPanel>
+        <p:outputPanel rendered="#{serviceViewCtrl.curNetZones!=null}">
+          <p>Services of zone #{serviceViewCtrl.curNetZones.title}</p>
+        </p:outputPanel>
+        <p:outputPanel rendered="#{serviceViewCtrl.curNetCenter!=null}">
+          <p>Services of center #{serviceViewCtrl.curNetCenter.name}</p>
+        </p:outputPanel>
+        <p>
+          By convention of SEHR a user has to be 
+          explicitely registered to use EHR data sets as a service. 
+          The registration takes place on the system (host) the app is running 
+          on. To get an overwiew of available services the SEHR hosts are 
+          exchanging registered EHR applications to offer them to their users.
+        </p>
+        <p:outputPanel rendered="#{serviceViewCtrl.moduleObject!=null}">
+          <p>Services of module #{serviceViewCtrl.moduleObject.name}</p>
+        </p:outputPanel>
+        <p:dataTable id="dataViewService" value="#{serviceViewCtrl.listServices}" 
+                     var="service" 
+                     paginator="true" 
+                     paginatorPosition="bottom" rows="10">
+
+          <p:column headerText="Module">
+            <h:outputText value="#{serviceViewCtrl.getModuleIdent(service.modid)}" />
+          </p:column>
+
+          <p:column headerText="Zone">
+            <h:outputText value="#{service.zoneid}" />
+          </p:column>
+
+          <p:column headerText="Center">
+            <h:outputText value="#{service.centerid}" rendered="#{service.centerid gt 0}" />
+            <h:outputText value="" rendered="#{service.centerid eq 0}" />
+          </p:column>
+
+          <p:column headerText="Title">
+            <h:outputText value="#{service.title}" />
+          </p:column>
+
+          <p:column headerText="URL (User)">
+            <h:outputLink value="#{service.urluser}" 
+                          rendered="#{serviceViewCtrl.isHttp(service.urluser)}" target="_blank" >
+              #{service.urluser}
+            </h:outputLink>
+            <h:outputText value="#{service.urluser} (invalid URL)" 
+                          rendered="#{not serviceViewCtrl.isHttp(service.urluser)}" />
+          </p:column>
+
+          <p:column style="width:120px;text-align: left;">
+            <p:commandButton update=":frmViewService:dlgEditService" oncomplete="PF('widEditService').show()" icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{service}" target="#{serviceViewCtrl.selNetServices}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewModules.xhtml')}"
+                             update=":ws_content" icon="ui-icon-disk" title="Show Module..."
+                             rendered="#{service.modid gt 0}">
+              <f:setPropertyActionListener value="#{service}" target="#{moduleViewCtrl.fltNetServices}" />
+            </p:commandButton>
+            <p:graphicImage library="images" name="exclamation_yellow_t_32x32.png" 
+                            title="No module locally registered for usage or verification." 
+                            style="width: 33px;vertical-align: middle;"
+                            rendered="#{service.modid le 0}"/>
+            <p:commandButton actionListener="#{serviceViewCtrl.checkModulePIK(service.pik)}"
+                             update="frmViewService:grwlViewService frmViewService:dataViewService" icon="ui-icon-extlink" title="Check module (app)..."
+                             rendered="#{not empty service.pik}">
+              <f:setPropertyActionListener value="#{service}" target="#{serviceViewCtrl.selNetServices}" />
+            </p:commandButton>
+            <p:graphicImage library="images" name="exclamation_red_32x32.png" 
+                            title="No PIK for verification!" 
+                            style="width: 33px;vertical-align: middle;"
+                            rendered="#{empty service.pik}"/>
+          </p:column>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="Service" widgetVar="widEditService" showEffect="fade" hideEffect="fade" 
+                  resizable="false">
+          <p:outputPanel id="dlgEditService" style="text-align:center;">
+            <p:panelGrid  columns="2" rendered="#{not empty serviceViewCtrl.selNetServices}" columnClasses="label,value">
+              <f:facet name="header">
+                <h:outputText value="#{serviceViewCtrl.selNetServices.title}"/> 
+              </f:facet>
+
+              <h:outputText value="Id:" />
+              <h:outputText value="#{serviceViewCtrl.selNetServices.svid}" />
+
+              <h:outputLabel for="fldTitle" value="Titel" />
+              <p:inputText id="fldTitle" value="#{serviceViewCtrl.selNetServices.title}" />
+
+              <h:outputLabel for="fldURL" value="URL for Users" />
+              <p:inputText id="fldURL" value="#{serviceViewCtrl.selNetServices.urluser}" />
+
+              <p:commandButton value="Cancel" onclick="PF('widEditService').hide()"/>
+              <p:commandButton value="Save" action="#{serviceViewCtrl.actionSaveService}" 
+                               onsuccess="PF('widEditService').hide()" 
+                               update=":frmViewService:grwlViewService :frmViewService:dataViewService"/>
+
+            </p:panelGrid>
+          </p:outputPanel>
+        </p:dialog>
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

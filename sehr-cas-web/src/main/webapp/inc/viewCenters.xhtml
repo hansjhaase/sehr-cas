@@ -1,0 +1,347 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+    <p:panel header="Center Administration" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{centerViewCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewCenter">
+        <p:growl id="grwlViewCenter" life="4000" showDetail="true" escape="false"/>
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="Add" 
+                             actionListener="#{centerViewCtrl.doPrepareNewCenterObject}" 
+                             icon="ui-icon-document" 
+                             update="grwlViewCenter :frmViewCenter:dlgEditCenter" 
+                             oncomplete="PF('widEditCenter').show();"
+                             disabled="#{centerViewCtrl.disabledAddCenter()}"/> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:menuButton value="List...">
+              <p:menuitem id="mnuFltByZone0" value="all linked centers" 
+                          actionListener="#{centerViewCtrl.mnuFltZone(-1)}" 
+                          update=":ws_content" />
+              <p:menuitem id="mnuFltByZone1" value="centers of this community" 
+                          actionListener="#{centerViewCtrl.mnuFltZone(moduleCtrl.localZoneID)}" 
+                          update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" actionListener="#{centerViewCtrl.doPrepareNewCenterObject}" 
+                          update="grwlViewCenter :frmViewCenter:dlgEditCenter" 
+                          oncomplete="PF('widEditCenter').show();" icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" 
+                          action="#{centerViewCtrl.doClose}" update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+        <!--
+        <h2>Center (Facilities)</h2>
+        -->
+        <p class="notered" >
+          Not yet fully implemented.
+        </p>
+        <p:outputPanel rendered="#{centerViewCtrl.zoneObject==null}">
+          <p>
+            The local zone ID is <h:outputText value="#{moduleCtrl.localZoneID}"/>.
+            The following list of centers have been registered. Registered 
+            centers can send and receive messages either if they are part of this community 
+            or globally using the SEHR XNET. 
+          </p>
+        </p:outputPanel>
+        <p:outputPanel rendered="#{centerViewCtrl.zoneObject!=null}">
+          <p>
+            The following list of centers are members of <h:outputText value="#{centerViewCtrl.zoneObject}"/>.
+          </p>
+        </p:outputPanel>
+        <p:dataTable id="dataViewCenter" value="#{centerViewCtrl.listCenters}" 
+                     widgetVar="widTableNetCenter"
+                     filteredValue="#{centerViewCtrl.lstNetCenterFiltered}"
+                     var="center" 
+                     paginator="true" paginatorPosition="bottom" rows="10" >
+          <p:ajax event="filter" listener="#{centerViewCtrl.filterListener}"
+                  update=":frmViewCenter:grwlViewCenter :frmViewCenter:dataViewCenter"/>
+          <f:facet name="header">
+            <p:outputPanel>
+              <h:outputText value="Search all fields:" />
+              <h:inputText id="globalFilter" 
+                           onkeyup="PF('widTableNetCenter').filter()" />
+            </p:outputPanel>
+          </f:facet>
+          <p:column headerText="" width="25">
+            <p:rowToggler />       
+          </p:column>
+          <p:column headerText="CID" width="70">
+            <h:outputText value="#{center.netCenterPK.centerid}" />
+          </p:column>
+
+          <p:column headerText="Name">
+            <h:outputText value="#{center.name}" />
+          </p:column>
+
+          <p:column filterBy="#{center.netCenterPK.zoneid}" filterMatchMode="equals"
+                    width="100">
+            <f:facet name="filter">
+              <p:selectCheckboxMenu label="Zone ID" 
+                                    onchange="PF('widTableNetCenter').filter()" 
+                                    panelStyle="width:150px;" scrollHeight="150">
+                <f:selectItems value="#{centerViewCtrl.lstNetZones}" 
+                               var="zone" itemLabel="#{zone}" itemValue="#{zone.zoneid}" />
+              </p:selectCheckboxMenu>
+            </f:facet>
+            <h:outputText value="#{center.netCenterPK.zoneid}" />
+          </p:column>
+          <p:column id="colStatusCon" headerText="" width="18" style="padding:1px;">
+            <p:graphicImage library="images" name="serv_on16x16.png" 
+                            title="Connected..." 
+                            rendered="#{centerViewCtrl.isAMQCon(center.netCenterPK)}"/>
+          </p:column>
+          <p:column width="150">
+            <p:commandButton update=":frmViewCenter:dlgEditCenter" 
+                             oncomplete="PF('widEditCenter').show()" 
+                             icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{center}" target="#{centerViewCtrl.netCenter}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewServices.xhtml')}"
+                             update=":ws_content" 
+                             icon="ui-icon-cloud" title="Services / Apps">
+              <f:setPropertyActionListener value="#{center}" target="#{sessionControl.netCenter}" />
+            </p:commandButton>
+          </p:column>
+          <p:rowExpansion>
+            <div style="display: none;">
+              <div id="mapMarker#{center.netCenterPK.centerid}" class="mapMarker" title="#{center.name}"></div>
+            </div>
+            <div class="mapcontainer" style="float:right;">
+              <div id="map#{center.netCenterPK.centerid}" class="map"></div>
+            </div>
+            <script>
+              var centerLoc = '#{centerViewCtrl.getGeoLocation(center.adrid)}';
+              //console.log(centerLoc);
+              if (centerLoc.length === 0) {
+                $("#map" +#{center.netCenterPK.centerid}).html("no geolocation data");
+              } else {
+                try {
+                  var oGeoLoc = JSON.parse(centerLoc);
+                  var epsgGeoLoc = ol.proj.transform(
+                          [oGeoLoc.lon, oGeoLoc.lat], 'EPSG:4326', 'EPSG:3857');
+
+                  var map#{center.netCenterPK.centerid} = new ol.Map({
+                    layers: [
+                      new ol.layer.Tile({source: new ol.source.OSM()})
+                    ],
+                    view: new ol.View({
+                      center: epsgGeoLoc,
+                      zoom: 16
+                    }),
+                    controls: ol.control.defaults().extend([
+                      new ol.control.OverviewMap(),
+                      new ol.control.FullScreen()
+                    ]),
+                    target: 'map#{center.netCenterPK.centerid}'
+                  });
+
+                  var marker = new ol.Overlay({
+                    position: epsgGeoLoc,
+                    positioning: 'center-center',
+                    element: document.getElementById('mapMarker#{center.netCenterPK.centerid}'),
+                    stopEvent: false
+                  });
+
+                  map#{center.netCenterPK.centerid}.addOverlay(marker);
+
+                  //var layer_markers = ol.layer.Markers("Address", {
+                  //
+                  //  projection: new ol.Projection("EPSG:4326"),
+                  //  visibility: true, displayInLayerSwitcher: false});
+                } catch (err) {
+                  $("#map" +#{center.netCenterPK.centerid}).html("error processing geolocation data");
+                }
+              }
+            </script>
+            <!-- left site -->
+            <p>
+              <b>#{center.name}</b><br/>
+              <u>Addess</u><br/>
+              <h:outputText value="#{centerViewCtrl.viewAddress(center.adrid)}" escape="false"/>
+            </p>
+          </p:rowExpansion>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog id="dlgEditCenter" header="Center" widgetVar="widEditCenter" showEffect="fade" 
+                  hideEffect="fade" resizable="false" style="width:800px; height:600px;">
+          <p:outputPanel id="pnlDlgEditCenter" style="border:0; margin:0;">
+            <p:tabView id="tvDlgEditCenter">
+              <p:ajax event="tabChange" listener="#{centerViewCtrl.onTabChange}"
+                      update="tvDlgEditCenter :frmViewCenter:pnlDlgEditCenterButtons"/>
+              <p:tab id="tabNetCenter" title="Stammsatz" rendered="#{not empty centerViewCtrl.netCenter}" >
+                <p:panelGrid  columns="2" 
+                              columnClasses="label,value">
+                  <f:facet name="header">
+                    <h:outputText value="#{centerViewCtrl.netCenter.name}"/> 
+                  </f:facet>
+
+                  <p:outputLabel for="fldCenterID" value="Id" />
+                  <p:inputText id="fldCenterID" 
+                               value="#{centerViewCtrl.netCenter.netCenterPK.centerid}" 
+                               disabled="#{centerViewCtrl.action eq 'edit' and centerViewCtrl.netCenter.netCenterPK.centerid gt 0}" />
+
+                  <p:outputLabel for="fldName" value="Name" />
+                  <p:inputText id="fldName" value="#{centerViewCtrl.netCenter.name}"/>
+                  
+                  <p:outputLabel>Public Key</p:outputLabel>
+                  <p:outputPanel>
+                  <p:graphicImage library="images" 
+                              name="important16x16.png" 
+                              title="No public key !" 
+                              rendered="#{not centerViewCtrl.netCenter.hasPublicKey()}"/>
+                  <p:graphicImage library="images" 
+                              name="lock16x16.png" 
+                              title="Public key !" 
+                              rendered="#{centerViewCtrl.netCenter.hasPublicKey()}"/>
+                  </p:outputPanel>
+                </p:panelGrid>
+              </p:tab>
+              <p:tab id="tabAdrMain" title="Adresse" rendered="#{not empty centerViewCtrl.adrMain}" >
+                <p:panelGrid  columns="2" 
+                              columnClasses="label,value">
+                  <f:facet name="header">
+                    <h:outputText value="#{centerViewCtrl.adrMain.adr1} [#{centerViewCtrl.adrMain.adrid}]"/> 
+                  </f:facet>
+
+                  <h:outputLabel value="Zeile 1 / Name" />
+                  <p:inputText value="#{centerViewCtrl.adrMain.adr1}" />
+
+                  <h:outputLabel value="Zeile 2 / Zusatz" />
+                  <p:inputText value="#{centerViewCtrl.adrMain.adr2}" />
+
+                  <h:outputLabel value="Zeile 3 / Zusatz 2" />
+                  <p:inputText value="#{centerViewCtrl.adrMain.adr3}" />
+                  <h:outputLabel value="Strasse" />
+                  <p:outputLabel>
+                    <p:inputText value="#{centerViewCtrl.adrMain.street}" />
+                    <p:inputText value="#{centerViewCtrl.adrMain.HN}" size="4" maxlength="6"/>
+                  </p:outputLabel>
+
+                  <h:outputLabel value="PLZ" />
+                  <p:inputText value="#{centerViewCtrl.adrMain.zip}" />
+
+                  <h:outputLabel value="Ort" />
+                  <p:inputText value="#{centerViewCtrl.adrMain.city}" />
+                  
+                </p:panelGrid>
+              </p:tab>
+              <p:tab id="tabGeoLoc" title="Geodaten" rendered="#{not empty centerViewCtrl.adrMain}">
+                <p:panelGrid  columns="2" 
+                              columnClasses="label,value">
+                  <f:facet name="header">
+                    <h:outputText value="#{centerViewCtrl.adrMain.city}, #{centerViewCtrl.adrMain.street}"/> 
+                  </f:facet>
+
+                  <h:outputLabel for="fldAdrMainGeoLat" value="Breitengrad" />
+                  <p:inputText id="fldAdrMainGeoLat" value="#{centerViewCtrl.adrMain.geolat}" />
+
+                  <h:outputLabel for="fldAdrMainGeoLon" value="Längengrad" />
+                  <p:inputText id="fldAdrMainGeoLon" value="#{centerViewCtrl.adrMain.geolng}" />
+                  
+                  <p:commandButton update="pnlGeoLocMap"
+                                   actionListener="#{centerViewCtrl.clearGeoLocation(centerViewCtrl.adrMain.adrid)}"
+                                   icon="ui-icon-trash" value="Delete Geodata" title="Delete..."/>
+                  <p:commandButton update="pnlGeoLocMap"
+                                   actionListener="#{centerViewCtrl.searchGeoLocation(centerViewCtrl.adrMain.adrid)}"
+                                   icon="ui-icon-home" value="Relocate by address" title="Research Location ..."/>
+                </p:panelGrid>
+                <p:outputPanel id="pnlGeoLocMap" rendered="#{not empty centerViewCtrl.geoData}">
+                  <div style="display: none;">
+                    <div id="mapMarker#{centerViewCtrl.adrMain.hashCode()}" class="mapMarker" title="#{centerViewCtrl.adrMain.adr1}"></div>
+                  </div>
+                  <div class="mapcontainer">
+                    <div id="map#{centerViewCtrl.adrMain.hashCode()}" class="map"></div>
+                  </div>
+                  <script>
+                    var centerLoc = '#{centerViewCtrl.getGeoLocation(centerViewCtrl.adrMain.adrid)}';
+                    if (window.console) {
+                      console.log(centerLoc);
+                    }
+                    if (centerLoc.length === 0) {
+                      $("#map" +#{centerViewCtrl.adrMain.hashCode()}).html("no geolocation data");
+                    } else {
+                      try {
+                        var oGeoLoc = JSON.parse(centerLoc);
+                        var epsgGeoLoc = ol.proj.transform(
+                                [
+                                  oGeoLoc.lon, oGeoLoc.lat
+                                ],
+                                'EPSG:4326', 'EPSG:3857'
+                                );
+
+                        var map#{centerViewCtrl.adrMain.hashCode()} = new ol.Map({
+                          layers: [
+                            new ol.layer.Tile({source: new ol.source.OSM()})
+                          ],
+                          view: new ol.View({
+                            center: epsgGeoLoc,
+                            zoom: 16
+                          }),
+                          controls: ol.control.defaults().extend([
+                            new ol.control.OverviewMap(),
+                            new ol.control.FullScreen()
+                          ]),
+                          target: 'map#{centerViewCtrl.adrMain.hashCode()}'
+                        });
+
+                        var marker = new ol.Overlay({
+                          position: epsgGeoLoc,
+                          positioning: 'center-center',
+                          element: document.getElementById('mapMarker#{centerViewCtrl.adrMain.hashCode()}'),
+                          stopEvent: false
+                        });
+
+                        map#{centerViewCtrl.adrMain.hashCode()}.addOverlay(marker);
+
+                        //var layer_markers = ol.layer.Markers("Address", {
+                        //
+                        //  projection: new ol.Projection("EPSG:4326"),
+                        //  visibility: true, displayInLayerSwitcher: false});
+                      } catch (err) {
+                        if (window.console) {
+                          console.log(err)
+                        }
+                        $("#map" +#{centerViewCtrl.adrMain.hashCode()}).html("error processing geolocation data");
+                      }
+                    }
+                  </script>
+                </p:outputPanel>
+              </p:tab>
+            </p:tabView>
+          </p:outputPanel>
+          <p:outputPanel id="pnlDlgEditCenterButtons" >
+            <p:commandButton value="New" 
+                             update=":frmViewCenter:grwlViewCenter tvDlgEditCenter"
+                             style="float:right;" 
+                             disabled="#{not centerViewCtrl.newAdrMainEnabled}"
+                             actionListener="#{centerViewCtrl.onNewAdrMain}"/>
+            <p:commandButton value="Cancel" onclick="PF('widEditCenter').hide()"/>
+            <p:commandButton value="Submit" action="#{centerViewCtrl.doSaveNetCenter}" 
+                             update=":frmViewCenter:grwlViewCenter tvDlgEditCenter" />
+            <p:commandButton value="Save" action="#{centerViewCtrl.doSaveNetCenter}" 
+                             onsuccess="PF('widEditCenter').hide()" 
+                             update="@form"/>
+          </p:outputPanel>
+        </p:dialog>
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

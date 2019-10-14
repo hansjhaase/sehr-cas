@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pm="http://primefaces.org/mobile">
+
+  <f:view renderKitId="PRIMEFACES_MOBILE"  />
+  <f:metadata>
+    <f:viewAction action="#{mobZoneListCtrl.checkLoginStatus}"/>
+  </f:metadata>
+  <h:head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+
+    <link rel="stylesheet" href="../resources/style/myjmed.min.css" />
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.icons.min.css" />
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+    -->
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.structure-1.4.5.min.css" />
+    <script src="../lib/jquery-1.11.1.min.js"></script>
+    <script src="../lib/jquery.mobile-1.4.5.min.js"></script>
+
+    <style>
+      .overlayMenuTitle {
+        font-size: 1.2em;
+        color: black;
+      }
+    </style>
+  </h:head>
+
+  <script type="text/javascript">
+    //window.addEventListener("load", function () {
+    //  // Set a timeout...
+    //  setTimeout(function () {
+    //    //alert('loading zoneList.xhtml');
+    //    // Hide the address bar!
+    //    //window.scrollTo(0, 1);
+    //  }, 0);
+    //});
+
+  </script>
+  <h:body >
+
+    <pm:page id="vwRegZoneList" swatch="a" >
+      <h:form id="frmRegZoneList">
+        <pm:header title="Zones (registered)" fixed="true">
+          <p:commandButton action="/mobile/index" value="X" icon="ui-icon-home" 
+                    styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right">
+            <f:setPropertyActionListener value="/mobile/index" target="#{mobileControl.xhtmlPage}" />
+          </p:commandButton> 
+        </pm:header>
+        <pm:content>        
+
+          <p:dataList id="dataRegZoneList" 
+                      value="#{mobZoneCtrl.registeredZones}" 
+                      var="entity">
+
+            <h:commandLink action="#{mobZoneCtrl.showZone}" style="#{mobZoneCtrl.statusBgColor(entity.zoneid)}" >
+              <f:setPropertyActionListener value="/mobile/zoneList" target="#{mobileControl.xhtmlPage}" />
+              <f:setPropertyActionListener value="#{entity}" target="#{mobZoneCtrl.zoneObject}" />
+              <h:panelGroup  >
+                <h:outputText value="#{entity.zoneid} #{entity.title}" style="font-size:0.9em;"/>
+                <br/>
+                <h:outputText value="#{entity.subdomname}." rendered="#{not empty entity.subdomname}"/><h:outputText value="#{entity.domname}"/>
+              </h:panelGroup>
+            </h:commandLink>
+
+          </p:dataList>
+
+          <p:ribbon />
+          <!--
+          <p:graphicImage url="/resources/images/Maennchen-gruen.png" width="100px" height="100px" style="float:right;"/>
+          -->
+          <p:outputPanel rendered="#{not mobZoneCtrl.localZoneServed}">
+            <p style="color:red;font-weight: bold;font-size: 0.8em;">
+              This Zone (#{moduleCtrl.localZoneID}) is offline! It must be in the <a href="./index.xhtml#vwZones">'Controlled Zones List'</a> to allow clients to use the services!
+            </p>  
+          </p:outputPanel>
+          <p style="margin-top: 25px;font-size: 0.8em;">
+            This list is showing registered zones by this host. A registred zone can be served or handle messages using the SEHR XNET. The local zone ID of this host is #{moduleCtrl.localZoneID}. 
+          </p>
+
+
+        </pm:content>
+      </h:form>
+    </pm:page>
+
+  </h:body>
+
+</html>

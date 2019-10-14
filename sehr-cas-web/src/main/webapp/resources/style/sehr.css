@@ -1,0 +1,447 @@
+/*
+   Name........: sehr.css
+   Author......:
+   Date Created:
+   Last Updated:
+   Copyright...: IFETH
+
+   The global parts of a SEHR workspace:
+   ---------------------------\
+   | screen_header           | \
+   ---------------------------  \
+   | screen_body = workspace |   |=screen
+   ---------------------------  /
+   | screen_footer           | /
+   ---------------------------/
+
+   n.b. 'screen_body' is equivalent to former used 'workspace'
+
+   Default Parts of a the screen_body (workspace):
+   -------------------------- \
+   ws_header                   \
+   --------------------------   \
+   | ws_nav |ws_content     |    |=workspace
+   --------------------------   /
+   ws_footer (StatusMessage)   /
+   -------------------------- /
+   ws_nav    = part of navigation, width=150px
+   ws_content= content, scalable rest of screen
+
+   Default Parts of a the content):
+   -------------------------- \
+   wsc_header (toolbar)        \
+   --------------------------   \
+   wsc_content                   |=content (views,lists,forms)
+   --------------------------   /
+   wsc_footer (buttons etc)    /
+   -------------------------- /
+
+   see also SEHR definitions about screen design
+
+   Using PRIMEFACES to build SEHR framework:
+   -----------------------------------------
+   layoutUnit position="north" size="80" resizable="false" closable="false" collapsible="false"
+   layoutUnit position="south" size="80" resizable="false" closable="false" collapsible="false"
+   layoutUnit position="west" size="200" header="Left" collapsible="true"
+   layoutUnit position="center"
+
+*/
+
+/* ----------------------------------------- imports */
+/* @import url("reset.css"); > moved to layout.css the 1st css include! */
+/* @import url("other_predefined_style.css"); */
+
+/* ========================================= screen components */
+/* ----------------------------------------- body */
+root { 
+  display: block;
+}
+
+body {
+  background-color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
+  line-height: 1.1em;
+  color: #000000;
+}
+
+.ui-layout-unit, .ui-layout-unit-content {
+  border-collapse: collapse;
+  border: 0px none;
+  overflow: auto;
+}
+
+.ui-widget .ui-widget {
+  font-size: 11pt;
+}
+.ui-panel .ui-panel-content {
+  padding: 0.1em;
+}
+.ui-growl {
+  left:20px;
+}
+.ui-tabs-panel{
+  padding:0;
+}
+
+h1 {
+  margin: 0;
+  color: #339a99; /* sehr color 1 */
+  padding-top: 1px;
+  padding-bottom: 1px;
+  font-size: 12pt;
+}
+
+h2 {
+  color: #373737; /* sehr gray */
+  /* color: #fe9900; */
+  margin: 0.5em 0 0.5em 0;
+  font-size: 12pt;
+}
+
+h3 {
+  color: #373737;
+  margin: .825em 0 .5em 0;
+  font-size: 11pt;
+}
+
+h4 {
+  color: #373737;
+  margin: .825em 0 .5em 0;
+  font-size: 11pt;
+}
+
+h5 {
+  color: #ffffff;
+  margin: .825em 0 .5em 0;
+  font-size: 11pt;
+}
+
+h6 {
+  color: #ffffff;
+  margin: .825em 0 .5em 0;
+  font-size: 11pt;
+}
+th {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: 10pt;
+  color: black;
+}
+p, td, li {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
+  line-height: 1.1em;
+  color: black;
+}
+
+p {
+  margin: 1em 0 0 0;
+}
+.p1 {
+  margin: 1em 0 0 0;
+  font-size: 10pt;
+}
+/*--- Link Styles ---*/
+/*
+a:link, a:visited {
+  color: #fe9900;
+}
+
+a:hover, a:active {
+  color: #339a99;
+  text-decoration: none;
+}
+*/
+blockquote {
+  margin: 0 0 18px 18px;
+  color: #666666;
+  font-style: italic;
+}
+
+strong {
+  font-weight: bold;
+}
+
+em {
+  font-style: italic;
+}
+
+/* Standard Definitions
+ ----------------------------------------*/
+.left {
+  float: left;
+}
+.center{
+  text-align: center;
+}
+.right {
+  float: right;
+}
+
+/* (en) essential for Safari browser !! */
+/* (de) Diese Angabe benötigt der Safari-Browser zwingend !! */
+.clearfix {
+  display: block;
+}
+
+.clearfloat {
+  clear: both;
+}
+
+.small {
+  font-size: .625em;
+}
+
+.large {
+  font-size: 1em;
+}
+
+.soft {
+  color: #D3D3D3;
+}
+
+.hide {
+  display: none;
+}
+
+p.last {
+  margin-bottom: 0px;
+}
+
+.p-small {
+  font-size: 0.6em;
+}
+
+/* SEHR Basic Screen Design
+ see DPG screendesign_gui_webapps_V2_0.pdf
+ ----------------------------------------*/
+#screen_header, #screen_body, #screen_footer {
+  clear: both;
+}
+
+#screen {
+  /* width: 900px; */
+  height: 100%;
+  min-height: 500px;
+  margin: 15px auto;
+  background-color: #ffffff;
+}
+
+/* Header */
+#header, #screen_header {
+  height: 80px;
+  background-color: #ffffff;
+  /* border-bottom: 1px solid #e5e5e5; */
+  padding-top: 1px;
+}
+
+#scrhd_logo {
+  float: left;
+  /* 
+  width: 130px;
+  height: 60px; 
+  */
+}
+
+#scrhd_logo img {
+  width: 130px;
+  height: 60px;
+}
+
+#scrhd_titlebar {
+  margin-top: 0;
+}
+
+#scrhd_titlebar {
+  margin: 0;
+}
+h1#scrhd_titlebar {
+  margin: 0.25em 0 0 0;
+}
+h2#scrhd_titlebar {
+  margin: 0.25em 0 0 0;
+}
+
+/* Nav Elements in Header*/
+ul#nav_top {
+}
+
+ul#nav_top li {
+  float: right;
+  list-style-type: none;
+  margin-left: 10px;
+}
+
+ul#nav_top li a {
+  height: 16px; /*set to height of image*/
+  display: block;
+  text-indent: -9999px;
+  outline: none;
+}
+
+/* Include more links dynamically with unique IDs */
+li#navHome a {
+  background-image: url(../images/app/home_16x16.png);
+  width: 16px;
+}
+
+/* CSS Rollover (Sprites) */
+li#navHome a:hover {
+  background-position: 0 -16px; /*Set to height of image !must be negative!*/
+}
+
+ul#nav_info {
+  margin-top: -10px;
+}
+
+ul#nav_info li {
+  float: right;
+  list-style-type: none;
+  margin-left: 10px;
+}
+
+/* Main Content */
+#main, #screen_body {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background-color: #ffffff;
+}
+#nav{
+  background-color: #339A99;
+}
+#ws_nav {
+  float: left;
+  width: 25%;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+
+h1#ws_content, h2#ws_content {
+  margin: 1.0em 0 0 0;
+  font-size: 1.25em;
+}
+
+#ws_info {
+  float: right;
+  height: 100%;
+  width: 25%;
+  background-color: #ffffff;
+}
+
+/* ws content */
+#col3_content {
+  padding: 10px 5px;
+}
+
+#col2_content {
+  padding: 10px 5px;
+}
+
+#ws_content {
+  width: auto;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+#ws_info h1 {
+  margin-top: 0;
+  font-size: 1.0em;
+}
+
+#ws_nav_body, #ws_content_body, #ws_info_body {
+  position: relative;
+  margin: 5px 10px 5px 10px;
+  font-size: 1.0em;
+  min-height: 500px;
+  height: 100%;
+  overflow: auto;
+}
+
+
+/* Footer */
+#screen_footer {
+  width: 900px;
+  height: 30px;
+  background-color: #ffffff;
+  border-top: 1px solid #339a99;
+}
+
+#screen_footer p {
+  font-size: .625em;
+}
+
+div.ui-datepicker {
+  font-size: 80%;
+}
+
+.tooltip {
+  position: absolute;
+  border: 1px solid #333;
+  padding: 2px 5px;
+  color: #000;
+  display: none;
+  text-decoration: none;
+  width: 500px;
+  background-color: #FFFF66;
+}
+
+.notered{
+  margin: 10px 10px 10px 10px;
+  color: #cd0a0a;
+  background-color: #fdfe99;
+  border: 1px solid #DDD;
+  box-shadow: 3px 3px 0px rgba(0,0,0, .2);
+}
+
+html #ie_clearing{
+  position:static;
+  display:block;
+  clear:both;
+  width: 100%;
+  font-size:0px;
+  /* margin: -2px 0 -1em 1px; */
+}
+
+.hlist {
+  background-color: #339a99;
+}
+.hlist ul {
+  padding-left: 0;
+}
+.hlist a {
+  text-decoration: none;
+}
+
+/* left navigation elements */
+.ddsmoothmenu-v ul {
+  background-color: #339a99;
+}
+
+.ddsmoothmenu-v ul li a.selected {
+  background: none repeat scroll 0 0 #339a99;
+  color: white;
+}
+
+.ddsmoothmenu-v ul li a:hover {
+  background: none repeat scroll 0 0 #339a99;
+  color: white;
+}
+
+.errorbox {
+  margin: 1.5em 1.5em 1.5em 1.5em;
+  background-color: #fdfe99;
+  color: red;
+  border: 1px solid red;
+  text-align: center;
+}
+.infobox {
+  margin: 1.5em 1.5em 1.5em 1.5em;
+  background-color: #daddfd;
+  color: blue;
+  border: 1px solid red;
+  text-align: center;
+}
+

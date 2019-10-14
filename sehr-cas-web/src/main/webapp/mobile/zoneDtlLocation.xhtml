@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:pm="http://primefaces.org/mobile">
+
+  <f:view renderKitId="PRIMEFACES_MOBILE"/>
+
+  <h:head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+
+    <link rel="stylesheet" href="../resources/style/myjmed.min.css" />
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.icons.min.css" />
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+    -->
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.structure-1.4.5.min.css" />
+    <!-- finally some SEHR spesialities like footer on bottom -->
+    <link rel="stylesheet" href="../resources/style/mobile.css" />
+
+    <script src="../lib/jquery-1.11.1.min.js"></script>
+    <script src="../lib/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+    <link rel="stylesheet" href="http://openlayers.org/en/v3.16.0/css/ol.css" type="text/css"/>
+    <script src="http://openlayers.org/en/v3.16.0/build/ol.js"></script>
+
+    <style>
+      .overlayMenuTitle {
+        font-size: 1.2em;
+        color: black;
+      }
+      .mapcontainer {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .map {
+        width: 200px;
+        height: 200px;
+      }
+      #markerMap {
+        width: 20px;
+        height: 20px;
+        border: 1px solid black;
+        border-radius: 10px;
+        background-color: red;
+        opacity: 0.8;
+      }
+    </style>
+    <script>
+      var infoStyle = new ol.style.Style({
+        image: new ol.style.Icon({
+          anchor: [0.5, 0.5],
+          size: [52, 52],
+          offset: [52, 0],
+          opacity: 1,
+          scale: 1,
+          src: '../resources/images/Maennchen-petrol16x16.png'
+        })
+      });
+    </script>
+  </h:head>
+
+  <script type="text/javascript">
+    window.addEventListener("load", function () {
+      // Set a timeout...
+      setTimeout(function () {
+        //alert('loading zoneShowDetails.xhtml');
+        // Hide the address bar!
+        //window.scrollTo(0, 1);
+      }, 0);
+    });
+    var wMap;
+    $(document).ready(function () {
+      wMap = $("#container").width();
+      console.log(wMap);
+      $("#map" +#{mobZoneCtrl.zoneObject.zoneid}).width(wMap);
+      $("#map" +#{mobZoneCtrl.zoneObject.zoneid}).height(wMap);
+      setTimeout(function () {
+        map#{mobZoneCtrl.zoneObject.zoneid}.updateSize();
+      }, 200);
+    });
+  </script>
+  <h:body >
+
+    <pm:page id="zoneDtlLocation">
+      <pm:header title="Zonedetails" fixed="true">
+        <p:button outcome="/mobile/zoneDtlInfo" value="X" icon="ui-icon-arrow-l" 
+                  styleClass="ui-btn-left ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+      <pm:content>
+        <h:form id="frmZoneDtlLoc">
+          <p:panel id="pnlLocation" header="Standort">
+            <div style="display: none;">
+              <div id="markerMap" title="#{mobZoneCtrl.zoneObject.title}"></div>
+            </div>
+            <div id="container" class="mapcontainer">
+              <div id="map#{mobZoneCtrl.zoneObject.zoneid}" class="map"></div>
+            </div>
+            <div id="info#{mobZoneCtrl.zoneObject.zoneid}"></div>
+            <script>
+              var response = '#{mobZoneCtrl.getGeoLocation(mobZoneCtrl.zoneObject)}';
+              //console.log(response);
+              if (response.length === 0) {
+                $("#map" +#{mobZoneCtrl.zoneObject.zoneid}).html("no geolocation data");
+              } else {
+
+                try {
+                  var oGeoLoc = JSON.parse(response);
+                  $("#info" +#{mobZoneCtrl.zoneObject.zoneid}).html(oGeoLoc.lon + "," + oGeoLoc.lat);
+                  var geoLoc = ol.proj.transform(
+                          [oGeoLoc.lon, oGeoLoc.lat], 'EPSG:4326', 'EPSG:3857');
+                  var map#{mobZoneCtrl.zoneObject.zoneid} = new ol.Map({
+                    layers: [
+                      new ol.layer.Tile({source: new ol.source.OSM()})
+                    ],
+                    view: new ol.View({
+                      center: geoLoc,
+                      zoom: 16
+                    }),
+                    target: 'map#{mobZoneCtrl.zoneObject.zoneid}'
+                  });
+                  var marker = new ol.Overlay({
+                    position: geoLoc,
+                    positioning: 'center-center',
+                    element: document.getElementById('markerMap'),
+                    stopEvent: false
+                  });
+                  map#{mobZoneCtrl.zoneObject.zoneid}.addOverlay(marker);
+                  //map#{mobZoneCtrl.zoneObject.zoneid}.updateSize();
+                  //$("#map" +#{mobZoneCtrl.zoneObject.zoneid}).show();
+                  $("#map" +#{mobZoneCtrl.zoneObject.zoneid}).width(wMap);
+                  $("#map" +#{mobZoneCtrl.zoneObject.zoneid}).height(wMap);
+                  setTimeout(function () {
+                    map#{mobZoneCtrl.zoneObject.zoneid}.updateSize();
+                  }, 200);
+                } catch (err) {
+                  $("#map" +#{mobZoneCtrl.zoneObject.zoneid}).html("error processing geolocation data<br/>" + err);
+                }
+
+              }
+            </script>
+          </p:panel>
+        </h:form>
+      </pm:content>
+      <pm:footer>
+        <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+          (C) by MDI GmbH build for the SEHR Community
+        </p>
+      </pm:footer>
+    </pm:page>
+  </h:body>
+
+</html>

@@ -1,0 +1,28 @@
+
+CREATE TABLE NET_NODE
+(
+  OID VCHAR128 NOT NULL,
+  NAME VCHAR128 DEFAULT '',
+  INFO BLOBTXT,
+  CENTERID INTEG DEFAULT 0,
+  ZONEID INTEG DEFAULT 0,
+  PERSONID INTEG DEFAULT 0,
+  DEVICEID INTEG DEFAULT 0,
+  PARENTOID VCHAR128,
+  CREATONDT Timestamp DEFAULT 'now',
+  CREATONOID VCHAR128,
+  VERIFIEDDT Timestamp DEFAULT 'now',
+  VERIFIEDOID VCHAR128,
+  INVALIDATEDDT Timestamp DEFAULT 'now',
+  INVALIDATEDOID VCHAR128,
+  DEACTIVATEDDT Timestamp DEFAULT 'now',
+  DEACTIVATEDOID VCHAR128,
+  CONSTRAINT PK_OID PRIMARY KEY (OID)
+);
+
+UPDATE RDB$RELATIONS set
+RDB$DESCRIPTION = 'A node used by XNET and other transfers to build a graph of interactions. A center is meber of a zone, a physician (a person) is member of one or more centers centers  he is working for; a device (mobile, broser client) is child of a person (patient) etc.'
+where RDB$RELATION_NAME = 'NET_NODE';
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON NET_NODE TO  SYSDBA WITH GRANT OPTION;
+

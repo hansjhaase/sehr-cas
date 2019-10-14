@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+    <h2>Welcome!</h2>
+    <div style="float: left;"><h:graphicImage name="images/epaper_250x130.jpg"/></div>
+    <p style="font-size: 0.8em;">
+      This is a <b>SEHR community host</b> - a server for a 
+      group of facilities and people sharing and managing patients in health care.
+    </p>
+    <p style="font-size: 0.8em; text-align: center; color: #007895; font-weight: bold;">
+      Unfortunately the owner of this zone did not create a presentation page.<br/> 
+      So the SEHR team will give you some informations.
+    </p>
+    <p style="font-size: 0.8em;">
+      Basically there is one host that ties some health care facilities (centers) of a region, community 
+      or group of participants together. This host serves some or more applications for managing the EHR (electronic health records) 
+      of their shared patients. Any (invited) facility may become a so called 'center'.
+      A 'center' produces and consumes medical records for documentation and 
+      planned procedures to support their patients during a defined (registered) episode of care.
+    </p>
+    <div style="float: right;"><h:graphicImage name="images/Circle_QualCare_Q_300x262_T.png" height="100%" width="100%" title="Image (C) by MDI GmbH"/></div>
+    <p style="font-size: 0.8em;">
+      The purpose of this site is to manage and monitor the community (group) of 
+      care providers and their applications. This page is not intended to be used by patients. 
+      Patients are welcome to use SEHR applications for a self-managed EHR.
+    </p>
+    <p style="font-size: 0.8em;">
+      To share medical data there are many issues that has to be solved and discussed. 
+      <!-- <b>SEHR</b> is only a
+      framework to build such services based on norms like EN13606 or the 
+      <a href="http://www.openehr.org" target="_blank">openEHR</a> project. -->
+
+      This service is a demonstration and field trial to use the <b>SEHR</b> 
+      libraries for managing care for a long period of time. <b>The first data, that have been 
+      processed, are from 2005 and are still available to the facilities of one of the first communities (a zone) in Germany.</b>
+    </p>
+    <h3>The SEHR team is looking forward to implementing your idea</h3>
+    <p style="font-size: 0.8em;">
+      <b>2013/2014:</b> The Institute IFETH starts a project with the
+      Univ. of the Philippines, Manila, in the field of public health. The aim of
+      the project is to implement a patient related service based on SEHR to let 
+      them request and store their medical records by smartphones. In this project the
+      huge infrastructure of smartphones owned by the people will be the 
+      carrier for each individual medical record to assist health services.
+    </p>
+    <p:outputPanel rendered="#{sessionControl.internetAvailable}">
+    <!-- IFETH, PayPal Donation Button -->
+    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+      <input type="hidden" name="cmd" value="_s-xclick"/>
+      <input type="hidden" name="hosted_button_id" value="TYRBXFUQ2PSCC"/>
+      <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"/>
+      <img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1"/>
+    </form>
+    <!-- ENd Of IFETH, PayPal Donation Button -->
+    </p:outputPanel>
+    <p class="p-small">
+      Version #{moduleCtrl.version}
+    </p>
+  </html>
+</ui:composition>

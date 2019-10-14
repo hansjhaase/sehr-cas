@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+    <div style="float: right;"><h:outputText id="stsXNet" value="#{moduleCtrl.status}" style="margin: 0; font-weight: normal;font-size: 0.7em; color: black; margin:0;" escape="false"/></div>
+    <p style="margin: 0; font-weight: normal;font-size: 0.7em; color: black; margin:0;">
+      SEHR Core Version #{moduleCtrl.version} / Zone #{moduleCtrl.localZoneIDAsString} / Operating Domain #{moduleCtrl.operatingDomain}<br/>
+      This application is based on libraries of the SEHR Project of the Institute for Economics &amp; Telematics in Healthcare.<br/>
+      The development takes place by a lot of motivated people in Asia and Europe believing in EHR (elecronic health recording) managed by open minded professionals and their patients.
+    </p>
+  </html>
+</ui:composition>

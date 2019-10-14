@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <style>
+      .lifecard {
+        background-image: url('resources/images/LifeCard-V8.png') !important;
+      }
+      .lifecard16x16 {
+        background-image: url('resources/images/LifeCard-V816x16.png') !important;
+      }
+    </style>
+    <p:panel header="Card Administration" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{cardsRegVwCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewLcMain">
+        <p:growl id="grwlViewLcMain" life="5000" showDetail="true" />
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="New" 
+                             action="#{cardsRegVwCtrl.doPrepareNewLcMainObject}"
+                             update=":ws_content" 
+                             icon="lifecard16x16" 
+                             /> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:menuButton value="Filter">
+              <p:menuitem value="All Registrations" 
+                          action="#{cardsRegVwCtrl.btnFltLifeCard(false)}" 
+                          update="grwlViewLcMain :frmViewLcMain:dataViewLcMain" 
+                          icon="ui-icon-document" />
+              <p:menuitem value="Holders with a card only" 
+                          icon="ui-icon-document" 
+                          action="#{cardsRegVwCtrl.btnFltLifeCard(true)}" 
+                          update="grwlViewLcMain :frmViewLcMain:dataViewLcMain" 
+                          />
+            </p:menuButton>
+
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" action="#{cardsRegVwCtrl.doPrepareNewLcMainObject}" 
+                          update=":ws_content"
+                          icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" 
+                          action="#{cardsRegVwCtrl.actionClose}" 
+                          update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+
+        <h2>LifeCARD Registrations</h2>
+        <p style="font-size: 11pt;">
+          List of all registered holders (patients) of a LifeCARD(R) or a 
+          compatible card. To get an overview of the produced cards use the link on the row.
+        </p>
+        <p:dataTable id="dataViewLcMain" value="#{cardsRegVwCtrl.listLcMain}" 
+                     var="lcMain" 
+                     paginator="true" paginatorPosition="bottom" rows="10">
+          <p:ajax event="rowToggle" listener="#{cardsRegVwCtrl.onRowToggle}"/> 
+          <f:facet name="header">
+            Registered LifeCARD holders (#{fn:length(cardsRegVwCtrl.listLcMain)})
+          </f:facet>
+          <p:column style="width:16px;">
+            <p:rowToggler />
+          </p:column>
+          <p:column headerText="ID" style="width:50px;">
+            <h:outputText value="#{lcMain.lcid}" />
+          </p:column>
+
+          <p:column headerText="Record">
+            <h:outputText value="#{lcMain.surname}, #{lcMain.firstname}" />
+            ,* <h:outputText value="#{lcMain.dob}">
+              <f:convertDateTime pattern="yyyy-MM-dd"/>
+            </h:outputText>
+          </p:column>
+
+          <p:column headerText="" width="16" style="padding: 0;">
+            <p:graphicImage library="images" name="new16x16.png" title="Status: #{lcMain.sts}" 
+                            rendered="#{lcMain.sts lt 20}" />
+            <p:graphicImage library="images" name="complete16x16.png" 
+                            title="Status: #{lcMain.sts}" 
+                            rendered="#{lcMain.sts==20}" />
+            <p:graphicImage library="images" name="gear16x16.png" 
+                            title="Status: #{lcMain.sts}" rendered="#{lcMain.sts==21}" />
+            <p:graphicImage library="images" name="mailletter16x16.png" 
+                            title="Status: #{lcMain.sts}" rendered="#{lcMain.sts==22}" />
+            <p:graphicImage library="images" name="Maennchen-gruen16x16.png" 
+                            title="Card activated/in use" rendered="#{lcMain.sts==25}" />
+            <p:graphicImage library="images" name="lock16x16.png" title="Card locked" 
+                            rendered="#{lcMain.sts ge 28 and lcMain.sts le 29 }" />
+            <p:graphicImage library="images" name="stop16x16.png" 
+                            title="Card invalid/out of use" rendered="#{lcMain.sts ge 90}" />
+          </p:column>
+          <p:column headerText="" width="16" style="padding: 0;">
+            <p:graphicImage library="images" name="identity16x16.png" 
+                            rendered="#{lcMain.prsid>0}" 
+                            title="Administrative record found" />
+          </p:column>
+
+          <p:column width="80" style="padding: 0;">
+            <p:commandButton update=":frmViewLcMain:dlgEditLcMain" 
+                             oncomplete="PF('widEditLcMain').show()" 
+                             icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{lcMain}" target="#{cardsRegVwCtrl.lcMainObject}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/viewCardsDelivered.xhtml')}"
+                             update=":ws_content" 
+                             icon="lifecard16x16" title="#{cardsRegVwCtrl.getCountLcCad(lcMain.lcid)} cards produced until now"
+                             rendered="#{cardsRegVwCtrl.getCountLcCad(lcMain.lcid)>0}">             
+              <f:setPropertyActionListener value="#{lcMain}" target="#{sessionControl.lcMain}" />
+            </p:commandButton>
+            <p:commandButton actionListener="#{sessionControl.viewPage('/inc/wizCardProd.xhtml')}"
+                             update=":ws_content" 
+                             icon="lifecard16x16" title="No cards have been yet produced."
+                             rendered="#{cardsRegVwCtrl.getCountLcCad(lcMain.lcid) le 0}">             
+              <f:setPropertyActionListener value="#{lcMain}" target="#{sessionControl.lcMain}" />
+            </p:commandButton>
+          </p:column>
+
+          <p:rowExpansion>
+            <div style="float:right;">
+              <p:outputPanel  rendered="#{lcMain.sts==25}">
+                <!-- p:graphicImage library="images" name="CRD_DS7_JMED_325x210.png"/><br/ -->
+                <p:graphicImage value="#{cardsRegVwCtrl.cardImage}" 
+                                rendered="#{not empty lcMain.item}">
+                  <f:param name="lcid" value="#{lcMain.lcid}" />
+                </p:graphicImage><br/>
+                <p:outputLabel rendered="#{empty lcMain.item}">
+                  <span style="color:red;font-weight: bold;font-size: 12px;">No print item but card delivered !?</span>
+                </p:outputLabel>
+              </p:outputPanel>
+              <p:outputPanel  rendered="#{lcMain.sts lt 20}">
+                <p style="color:blue;font-weight: bold;font-size: 14pt;">Card registration in progress.</p>
+              </p:outputPanel>
+              <p:outputPanel  rendered="#{lcMain.sts ge 20 and lcMain.sts lt 25 }">
+                <p style="color:blue;font-weight: bold;font-size: 14pt;">Card production/delivery in progress.</p>
+              </p:outputPanel>
+              <p:outputPanel  rendered="#{lcMain.sts ge 28 and lcMain.sts le 29}">
+                <p style="color:red;font-weight: bold;font-size: 14pt;">Card locked by user or issuer!</p>
+              </p:outputPanel>
+              <p:outputPanel  rendered="#{lcMain.sts ge 90}">
+                <p style="color:red;font-weight: bold;font-size: 14pt;">Card cancelled/invalid</p>
+              </p:outputPanel>
+            </div>  
+            <!-- TODO get formatted text from controller -->
+            <b>Registration:</b><br/> 
+            <h:outputText value="#{lcMain.firstname}" />,
+            <h:outputText value="#{lcMain.surname}" />, *
+            <h:outputText value="#{lcMain.dob}" >
+              <f:convertDateTime pattern="yyyy-MM-dd"/>
+            </h:outputText>
+            <br/>
+            <b>Card Data:</b><br/> 
+            <h:outputText value="#{cardsRegVwCtrl.getCardData(lcMain)}" rendered="#{not empty lcMain.item}"/><br/>
+            <p:outputPanel rendered="#{lcMain.prsid>0}">
+              <p>
+                <b>Administrative Record (Person):</b><br/>  
+                <h:outputText value="#{cardsRegVwCtrl.getPrsMain(lcMain.prsid)}"/>
+              </p>
+            </p:outputPanel>
+
+          </p:rowExpansion>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="LcMain" widgetVar="widEditLcMain" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditLcMain" style="text-align:center;">
+            <p:panelGrid  columns="2" rendered="#{not empty cardsRegVwCtrl.lcMainObject}" 
+                          columnClasses="label,value">
+              <f:facet name="header">
+                <h:outputText value="#{cardsRegVwCtrl.lcMainObject.surname}"/> 
+                <p:graphicImage library="images" name="#{cardsRegVwCtrl.statusImg}" />
+                <p:graphicImage library="images" name="CRD_DS7_JMED_22x14.png" rendered="#{cardsRegVwCtrl.lcMainObject.sts==1}" />
+              </f:facet>
+
+              <h:outputText  value="Lcid" />
+              <h:outputText value="#{cardsRegVwCtrl.lcMainObject.lcid}" />
+
+              <h:outputLabel value="Patient-/Person Record" />
+              <p:inputText id="fldPrsId" 
+                           value="#{cardsRegVwCtrl.lcMainObject.prsid}" 
+                           rendered="#{empty cardsRegVwCtrl.lcMainObject.prsid or cardsRegVwCtrl.lcMainObject.prsid le 0}"/>
+              <h:outputText value="#{cardsRegVwCtrl.lcMainObject.prsid}" 
+                            rendered="#{cardsRegVwCtrl.lcMainObject.prsid gt 0}"/>
+
+              <h:outputLabel for="fldTitle" value="Title" />
+              <p:inputText id="fldTitle" value="#{cardsRegVwCtrl.lcMainObject.title}" />
+
+              <h:outputLabel for="fldFirstname" value="Firstname" />
+              <p:inputText id="fldFirstname" value="#{cardsRegVwCtrl.lcMainObject.firstname}" />
+
+              <h:outputLabel for="fldMiddle" value="Middle" />
+              <p:inputText id="fldMiddle" value="#{cardsRegVwCtrl.lcMainObject.middle}" />
+
+              <h:outputLabel for="fldSurname" value="Surname" />
+              <p:inputText id="fldSurname" value="#{cardsRegVwCtrl.lcMainObject.surname}" />
+
+              <h:outputLabel for="fldDOB" value="DOB" />
+              <p:inputText id="fldDOB" value="#{cardsRegVwCtrl.lcMainObject.dob}">
+                <f:convertDateTime pattern="yyyy-MM-dd"/>
+              </p:inputText>
+
+              <p:commandButton value="Cancel" onclick="PF('widEditLcMain').hide()"/>
+              <p:commandButton value="Save" actionListener="#{cardsRegVwCtrl.actionSaveLcMainObject}" 
+                               onsuccess="PF('widEditLcMain').hide()" 
+                               update=":frmViewLcMain:grwlViewLcMain :frmViewLcMain:dataViewLcMain"/>
+
+            </p:panelGrid>
+            <!-- hidden fields, required for LcMain processing but not subject to edit yet -->
+            <p:outputPanel style="display:none;">
+              <p:inputText id="fldLcId" value="#{cardsRegVwCtrl.lcMainObject.lcid}" />
+              <p:inputText id="fldCountry" value="#{cardsRegVwCtrl.lcMainObject.country}" />
+              <p:inputText id="fldZID" value="#{cardsRegVwCtrl.lcMainObject.zoneid}" />
+              <p:inputText id="fldCID" value="#{cardsRegVwCtrl.lcMainObject.centerid}" />
+              <p:inputText id="fldPID" value="#{cardsRegVwCtrl.lcMainObject.patid}" />
+              <p:inputText id="fldHostID" value="#{cardsRegVwCtrl.lcMainObject.hostid}" />
+              <p:inputText id="fldUID" value="#{cardsRegVwCtrl.lcMainObject.usrid}" />
+              <p:inputText id="fldsts" value="#{cardsRegVwCtrl.lcMainObject.sts}" />
+            </p:outputPanel>
+          </p:outputPanel>
+        </p:dialog>
+
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

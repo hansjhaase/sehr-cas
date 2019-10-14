@@ -1,0 +1,49 @@
+
+  Following is a simplified view of the architectural model assumed by
+   the PKIX specifications.
+
+   The components in this model are:
+
+   end entity: user of PKI certificates and/or end user system that is
+               the subject of a certificate;
+   CA:         certification authority;
+   RA:         registration authority, i.e., an optional system to which
+               a CA delegates certain management functions;
+   CRL issuer: an optional system to which a CA delegates the
+               publication of certificate revocation lists;
+   repository: a system or collection of distributed systems that stores
+               certificates and CRLs and serves as a means of
+               distributing these certificates and CRLs to end entities.
+
+https://www.cs.auckland.ac.nz/~pgut001/pubs/x509guide.txt
+
+Some CAs issue certs with identical CN's and use the email address to disambiguate them,
+others modify the CN to make it unique.  The accepted user interface seems to
+be to let users search on the CN and/or email address (and sometimes also the
+serial number, which doesn't seem terribly useful), display a list of matches,
+and let the user pick the cert they want.  Probably the best strategy for a
+user interface which handles certs is:
+
+  if( email address known )
+    get a cert which matches the email address (any one should do);
+  elseif( name known )
+    search for all certs with CN=name;
+    if( multiple matches )
+      display email addresses for matched certs to user, let them choose;
+  else
+    error;
+
+    error;
+If you need something unique to use as an identifier (for example for a
+database key) and you know your own software (or more generally software which
+can do something useful with the identifier) will be used, use an X.500
+serialNumber in a subjectAltName directoryName or use a subjectAltName
+otherName (which was explicitly created to allow user-defined identifiers).
+For internal cert lookups, encode the cert issuer and serial number as a PKCS
+#7 issuerAndSerialNumber, hash it down to a fixed size with SHA-1 (you can
+either use the full 20 bytes or some convenient truncated form like 64 bits),
+and use that to identify the cert.
+
+An alternative way to avoid expiry problems is to give the certificate an
+expiry date several decades in the future.  This is popular for CA certs which
+don't require an annual renewal fee. or monthly fee?

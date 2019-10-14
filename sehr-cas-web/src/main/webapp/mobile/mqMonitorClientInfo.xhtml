@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:pm="http://primefaces.org/mobile">
+
+  <f:view renderKitId="PRIMEFACES_MOBILE"/>
+
+  <h:head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+
+    <link rel="stylesheet" href="../resources/style/myjmed.min.css" />
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.icons.min.css" />
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+    -->
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.structure-1.4.5.min.css" />
+    <!-- finally some SEHR spesialities like footer on bottom -->
+    <link rel="stylesheet" href="../resources/style/mobile.css" />
+
+    <script src="../lib/jquery-1.11.1.min.js"></script>
+    <script src="../lib/jquery.mobile-1.4.5.min.js"></script>
+
+    <style>
+      .overlayMenuTitle {
+        font-size: 1.2em;
+        color: black;
+      }
+    </style>
+  </h:head>
+
+  <script type="text/javascript">
+    window.addEventListener("load", function () {
+      // Set a timeout...
+      setTimeout(function () {
+        //alert('loading mqMonitorClientInfo.xhtml');
+        // Hide the address bar!
+        //window.scrollTo(0, 1);
+      }, 0);
+    });
+
+  </script>
+  <h:body >
+
+    <pm:page id="clientInfo" title="SEHR Admin">
+      <pm:header title="AMQ Connection" fixed="true">
+        <p:button outcome="/mobile/mqMonitor" value="Back" icon="ui-icon-arrow-l" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+      <pm:content>
+        <h:form>
+          <p:panel header="Information">
+            <span style="font-size: 0.8em;font-weight: bold;">ClientID</span><br/> 
+            #{mqControl.selectedMQClient.clientId}
+            <br/>
+            <span style="font-size: 0.8em;font-weight: bold;">IP/Host</span><br/> 
+            #{mqControl.selectedMQClient.clientIP}
+            <br/>
+            <span style="font-size: 0.8em;font-weight: bold;">ConID</span><br/> 
+            #{mqControl.selectedMQClient.conid}
+            <br/>
+            <span style="font-size: 0.8em;font-weight: bold;">Opened</span><br/> 
+            <h:outputText value="#{mqControl.cvtLong2DT(monitorControl.selectedMQClient.conOpened)}">
+              <f:convertDateTime pattern="d-M-yyyy HH:mm z" />
+            </h:outputText><br/>
+            <span style="font-size: 0.8em;font-weight: bold;">Closed</span><br/> 
+            <h:outputText value="#{mqControl.selectedMQClient.conClosed}">
+              <f:convertDateTime pattern="d-M-yyyy HH:mm z" />
+            </h:outputText>
+
+          </p:panel>
+        </h:form>
+      </pm:content>
+      <pm:footer fixed="true">
+        <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+          (C)MDI GmbH, Hans J Haase <a href='mailto:hansjhaase@mdigmbh.de' style='color:white;'>hansjhaase@mdigmbh.de</a>
+        </p>
+      </pm:footer>
+    </pm:page>
+  </h:body>
+
+</html>

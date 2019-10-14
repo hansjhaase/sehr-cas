@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <p:panel header="Cards of #{cardsDeliveredViewCtrl.holder}" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{cardsDeliveredViewCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmViewLcCad">
+        <p:growl id="grwlViewLcCad" life="2000" />
+
+        <p:toolbar>
+          <f:facet name="left">
+            <p:commandButton value="Add" 
+                             actionListener="#{cardsDeliveredViewCtrl.doPrepareNewLcCadObject}" 
+                             icon="ui-icon-document" 
+                             update="grwlViewLcCad :frmViewLcCad:dlgEditLcCad" 
+                             oncomplete="PF('widEditLcCad').show();"/> 
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:menuButton value="Filter">
+              <p:menuitem value="All Registrations" 
+                          actionListener="#{cardsDeliveredViewCtrl.btnFltLifeCard(false)}" 
+                          update="grwlViewLcCad :frmViewLcCad:dataViewLcCad" 
+                          icon="ui-icon-document" />
+              <p:menuitem value="Holders with a card only" 
+                          icon="ui-icon-document" 
+                          action="#{cardsDeliveredViewCtrl.btnFltLifeCard(true)}" 
+                          update="grwlViewLcCad :frmViewLcCad:dataViewLcCad" 
+                          />
+            </p:menuButton>
+
+            <span class="ui-separator">
+              <span class="ui-icon ui-icon-grip-dotted-vertical" />
+            </span>
+            <p:commandButton type="button" title="Lc" icon="ui-icon-disk" />
+          </f:facet>
+
+          <f:facet name="right">
+            <p:menuButton value="Options">
+              <p:menuitem value="New" actionListener="#{cardsDeliveredViewCtrl.doPrepareNewLcCadObject}" 
+                          update="grwlViewLcCad :frmViewLcCad:dlgEditLcCad" 
+                          oncomplete="PF('widEditLcCad').show();" icon="ui-icon-disk" />
+              <p:menuitem value="Close" icon="ui-icon-close" 
+                          action="#{cardsDeliveredViewCtrl.actionClose}" update=":ws_content" />
+            </p:menuButton>
+          </f:facet>
+
+        </p:toolbar>
+
+        <h2>LifeCARD Productions for #{cardsDeliveredViewCtrl.holder}</h2>
+        <p style="font-size: 11pt;">
+          List of all cards produced (or on production) for the shown holder.
+        </p>
+        <p:dataTable id="dataViewLcCad" value="#{cardsDeliveredViewCtrl.listLcCad}" 
+                     var="lcCad" 
+                     paginator="true" paginatorPosition="bottom" rows="10">
+          <f:facet name="header">
+            Produced LifeCARDs for #{cardsDeliveredViewCtrl.holder} (#{fn:length(cardsDeliveredViewCtrl.listLcCad)})
+          </f:facet>
+          <p:column width="16" >
+            <p:rowToggler />
+          </p:column>
+          <p:column headerText="ID" width="*" >
+            <h:outputText value="#{cardsDeliveredViewCtrl.getCardInfo(lcCad.lcCadPK)}" />
+            <h:outputText value=", Seq.No.: #{lcCad.lcCadPK.cardid}" />
+          </p:column>
+
+          <p:column headerText="Status" width="64" >
+            <p:graphicImage library="images" name="new16x16.png" title="Status: #{lcCad.status}" rendered="#{lcCad.status lt 20}" />
+            <p:graphicImage library="images" name="complete16x16.png" title="Status: #{lcCad.status}" rendered="#{lcCad.status==20}" />
+            <p:graphicImage library="images" name="gear16x16.png" title="Status: #{lcCad.status}" rendered="#{lcCad.status==21}" />
+            <p:graphicImage library="images" name="mailletter16x16.png" title="Status: #{lcCad.status}" rendered="#{lcCad.status==22}" />
+            <p:graphicImage library="images" name="Maennchen-gruen16x16.png" title="Card activated/in use" rendered="#{lcCad.status==25}" />
+            <p:graphicImage library="images" name="lock16x16.png" title="Card locked" rendered="#{lcCad.status ge 28 and lcCad.status le 29 }" />
+            <p:graphicImage library="images" name="stop16x16.png" title="Card out of use" rendered="#{lcCad.status ge 90}" />
+          </p:column>
+
+          <p:column width="80" style="text-align: left">
+            <p:commandButton update=":frmViewLcCad:dlgEditLcCad" 
+                             oncomplete="PF('widEditLcCad').show()" 
+                             icon="ui-icon-pencil" title="Edit">
+              <f:setPropertyActionListener value="#{lcCad}" target="#{cardsDeliveredViewCtrl.lcCadObject}" />
+            </p:commandButton>
+            <p:commandButton update=":frmViewLcCad:grwlViewLcCad :frmViewLcCad:dataViewLcCad :ws_content"  
+                             icon="ui-icon-locked" 
+                             title="Deactivate Card (or order)" 
+                             actionListener="#{cardsDeliveredViewCtrl.actionListenerDeactivateLcCad}"
+                             action="#{cardsDeliveredViewCtrl.actionDeactivateLcCad}"
+                             rendered="#{lcCad.status lt 28}">
+              <f:setPropertyActionListener value="#{lcCad}" target="#{cardsDeliveredViewCtrl.lcCadObject}" />
+            </p:commandButton>
+
+          </p:column>
+
+          <p:rowExpansion >
+            <!-- p:graphicImage library="images" name="CRD_DS7_JMED_325x210.png"/><br/ -->
+            <p:outputPanel  rendered="#{not empty cardsRegVwCtrl.cardImage}">
+              <!-- p:graphicImage library="images" name="CRD_DS7_JMED_325x210.png"/><br/ -->
+              <p:graphicImage value="#{cardsRegVwCtrl.cardImage}">
+                <f:param name="lcid" value="#{lcCad.lcCadPK.lcid}" />
+              </p:graphicImage><br/>
+              <br/>
+            </p:outputPanel>
+            <p:outputPanel  rendered="#{empty cardsRegVwCtrl.cardImage}">
+              <!-- p:graphicImage library="images" name="CRD_DS7_JMED_325x210.png"/><br/ -->
+              <p:graphicImage library="images" value="LifeCard-V8_NoImage.png"/>
+              <br/>
+            </p:outputPanel>
+            <!-- TODO get formatted text from controller -->
+            <h:outputText value="#{cardsDeliveredViewCtrl.getCardStatus(lcCad.lcCadPK)}" >
+            </h:outputText>
+            
+
+          </p:rowExpansion>
+        </p:dataTable>
+
+        <!-- modal="true"  does not work with layout out of the box -->
+        <p:dialog header="LcCad" widgetVar="widEditLcCad" showEffect="fade" 
+                  hideEffect="fade" resizable="false">
+          <p:outputPanel id="dlgEditLcCad" style="text-align:center;">
+            <p:panelGrid  columns="2" rendered="#{not empty cardsDeliveredViewCtrl.lcCadObject}" 
+                          columnClasses="label,value">
+              <f:facet name="header">
+                <h:outputText value="#{cardsDeliveredViewCtrl.lcCadObject.lcCadPK.cardid}"/> 
+              </f:facet>
+
+              <h:outputLabel value="Card App Identifier" title="The token of the application on the card." />
+              <p:inputText value="#{cardsDeliveredViewCtrl.lcCadObject.cai}" />
+
+              <h:outputLabel value="Card Appication Type" title="Should be '16' (Community Usage)" />
+              <p:inputText value="#{cardsDeliveredViewCtrl.lcCadObject.caiCat}" />
+
+              <h:outputLabel value="Card Serial No.:"  title="SerNo of the chipset" />
+              <p:inputText value="#{cardsDeliveredViewCtrl.lcCadObject.cvSer}" />
+
+              <h:outputLabel value="Card Vendor ID:" title="Chipset Vendor ID"/>
+              <p:inputText value="#{cardsDeliveredViewCtrl.lcCadObject.cvID}" />
+
+              <p:commandButton value="Cancel" onclick="PF('widEditLcCad').hide()"/>
+              <p:commandButton value="Save" actionListener="#{cardsDeliveredViewCtrl.actionSaveLcCadObject}" 
+                               onsuccess="PF('widEditLcCad').hide()" 
+                               update=":frmViewLcCad:grwlViewLcCad :frmViewLcCad:dataViewLcCad"/>
+
+            </p:panelGrid>
+            <!-- hidden fields, required for LcCad processing but not subject to edit yet -->
+            <p:outputPanel style="display:none;">
+              <p:inputText id="fldCaiCat" value="#{cardsDeliveredViewCtrl.lcCadObject.caiCat}" />
+            </p:outputPanel>
+          </p:outputPanel>
+        </p:dialog>
+
+      </h:form>
+    </p:panel>
+
+  </html>
+</ui:composition>

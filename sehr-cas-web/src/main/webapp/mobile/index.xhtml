@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pm="http://primefaces.org/mobile">
+
+  <f:view renderKitId="PRIMEFACES_MOBILE"  />
+
+  <f:metadata>
+    <f:viewAction action="#{mobileControl.checkLoginStatus}"/>
+  </f:metadata>
+
+  <h:head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+
+    <link rel="stylesheet" href="../resources/style/myjmed.min.css" />
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.icons.min.css" />
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+    -->
+    <link rel="stylesheet" href="../resources/style/jquery.mobile.structure-1.4.5.min.css" />
+    <!-- finally some SEHR spesialities like footer on bottom -->
+    <link rel="stylesheet" href="../resources/style/mobile.css" />
+
+    <script src="../lib/jquery-1.11.1.min.js"></script>
+    <script src="../lib/jquery.mobile-1.4.5.min.js"></script>
+    <!-- script src="../lib/jquery.mobile-1.4.5.min.map"></script -->
+
+    <!-- script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script -->
+    <link rel="stylesheet" href="http://openlayers.org/en/v3.16.0/css/ol.css" type="text/css"/>
+    <script src="http://openlayers.org/en/v3.16.0/build/ol.js"></script>
+
+    <style>
+      .eighty{
+        width:80%;
+      }
+      .twenty{
+        width:20%;
+      }
+      .overlayMenuTitle {
+        font-size: 1.2em;
+        color: black;
+      }
+      .mapcontainer {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .map {
+        width: 200px;
+        height: 200px;
+      }
+      #markerMap {
+        width: 20px;
+        height: 20px;
+        border: 1px solid black;
+        border-radius: 10px;
+        background-color: red;
+        opacity: 0.8;
+      }
+      .scrollable {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* iOS specific fix, don't use it on Android devices */
+      /*
+      .scrollable > * {
+          -webkit-transform: translateZ(0px);
+      }
+      */
+    </style>
+  </h:head>
+
+  <h:body >
+    <script type="text/javascript">
+      var screen;
+      function handleCountMessages(data) {
+        //alert('data=' + data);
+        $('vwIntro:frmIntro:outCntMsg').html(data);
+      }
+
+      function getContentHeight() {
+        var header = $(".ui-header").hasClass("ui-header-fixed") ? $(".ui-header").outerHeight() - 1 : $(".ui-header").outerHeight();
+        var footer = $(".ui-footer").hasClass("ui-footer-fixed") ? $(".ui-footer").outerHeight() - 1 : $(".ui-footer").outerHeight();
+        var contentCurrent = $(".ui-content").outerHeight() - $(".ui-content").height();
+        var content = screen - header - footer - contentCurrent;
+        return content;
+      }
+
+      window.addEventListener("load", function () {
+        // Set a timeout...
+        setTimeout(function () {
+          // Hide the address bar!
+          window.scrollTo(0, 1);
+        }, 0);
+      });
+      
+      $(document).ready(function () {
+        screen = $.mobile.getScreenHeight();
+        //var vwPage = $("#viewPage").val();
+        var vwPage = "#{mobileControl.viewPage}";
+        if (window.console) {
+          //$.mobile.subPageUrlKey='ui-page'
+          console.log($.mobile.subPageUrlKey + '/vwPage=' + vwPage);
+        }
+        $.mobile.changePage('./index.xhtml#' + vwPage, {
+          //transition: "slide",
+          reverse: true
+        });
+        /*
+         $('.scrollable').css({
+         'height': ($(document).height()) + 'px'
+         });
+         $(window).resize(function () {
+         $('.scrollable').css({
+         'height': ($(document).height()) + 'px'
+         });
+         });
+         */
+
+      });
+      /*
+      $(window).resize(function () {
+        $('.scrollable').css({
+          'height': (getContentHeight() - 50 + 'px'
+        });
+      });
+      */
+     $(document).on("pageshow","#vwChatRoom",function () {
+        console.log($('#vwChatRoom').height()+","+$.mobile.getScreenHeight());
+        $('.scrollable').css({
+          'height': ($.mobile.getScreenHeight() - 220) + 'px'
+        });
+      });
+    </script>
+    <p:socket onMessage="handleCountMessages" channel="/chatMsgCount">
+      <p:ajax event="message" update=":vwChatRoom:frmChatRoom:dataChatMsg"/>
+    </p:socket>  
+
+    <!-- intro / start -->
+    <pm:page id="vwIntro" swatch="a">
+      <h:form id="frmIntro">
+        <p:overlayPanel for="mnuLeft" widgetVar="pnl-basic" at="left" showEffect="overlay" style="background-color: #FFFDCC;" >
+          <h1 class="overlayMenuTitle">Optionen</h1>
+          <p:menu>
+            <p:menuitem value="Zones" url="#vwZones" />
+            <p:menuitem value="Center" url="#vwCenter" />
+            <p:menuitem value="Contacts" url="#vwContacts" />
+            <p:menuitem value="Messaging" url="#vwChat" />
+            <p:menuitem value="Settings" url="#vwSettings" />
+            <p:menuitem value="Logout" actionListener="#{mobileControl.logout}" 
+                        oncomplete="$.mobile.changePage('./login.xhtml');"/>
+          </p:menu>
+          <br/>
+          <h1 class="overlayMenuTitle">Infos</h1>
+          <p:menu>
+            <p:menuitem value="About..." url="#vwAbout" />
+          </p:menu>
+        </p:overlayPanel>
+        <pm:header title="SEHR Admin" fixed="true">
+          <!-- 
+          <p:button outcome="pm:vwLogin" value="X" icon="ui-icon-arrow-l" styleClass="ui-btn-left ui-btn-inline"/>
+          <p:button outcome="pm:vwEditER" value="..." icon="ui-icon-gear" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+          -->          
+          <div data-role="navbar" data-iconpos="top">
+            <ul>            
+              <li>
+                <p:commandButton id="mnuLeft" value="Menu..." iconPos="top" icon="ui-icon-plus"/>
+              </li>
+              <li>
+                <p:button value="Zones" iconPos="top" icon="ui-icon-grid" href="#vwZones"/>
+              </li>
+              <li>
+                <p:button value="Center" iconPos="top" icon="ui-icon-grid" href="#vwCenter"/>
+              </li>
+              <li> 
+                <p:button value="Monitor"  iconPos="top" icon="ui-icon-alert" outcome="/mobile/mqMonitor"/>
+              </li>
+            </ul>
+          </div>
+          <!-- /navbar -->
+        </pm:header>
+
+        <pm:content>
+          <h:outputText id="txtUsername" value="#{mobileControl.username}"/>,
+          <p:outputPanel rendered="#{not mobileControl.AMQConnected}">
+            <p style="color:red;font-weight: bold;font-size: 1.2em;">
+              Service is down!
+            </p>
+            <p style="color:black;font-weight: bold;font-size: 0.8em;">
+              Start the AMQ messaging service using the server console!
+            </p>
+          </p:outputPanel>
+          <p:outputPanel rendered="#{mobileControl.AMQConnected}">
+            <p style="color: black;">
+              tap on <p:link outcome="/mobile/mqMonitor">Monitor</p:link> to get current connections. 
+            </p>
+            <p:outputPanel rendered="#{not mobZoneCtrl.localZoneServed}">
+              <p style="color:red;font-weight: bold;font-size: 0.8em;">
+                This Zone (#{moduleCtrl.localZoneID}) the service 
+                is running on must be in the <a href="./mobile/index.xhtml#vwZones">'Controlled Zones List'</a> to allow clients to connect!
+              </p>  
+            </p:outputPanel>
+            <p:outputPanel rendered="#{mobZoneCtrl.localZoneServed}">
+              <p style="color: black;">
+                Use <p:link outcome="pm:vwCenter">Center</p:link> to get a list of currently connected health facilities. 
+              </p>
+            </p:outputPanel>
+            <p style="color: black;">
+              <h:outputText id="outCntMsg" value="#{mobileControl.countMessages}"/><p:link outcome="pm:vwChat">messages</p:link>.
+            </p>
+          </p:outputPanel>
+          <p style="color: black;font-size:0.8em;">Use the top buttons or menu for administation.</p>
+
+          <p style="color: darkcyan;font-size:0.8em;font-style: italic;text-align: justify;">
+            SEHR is a project run by volonteers and students at various Universities 
+            and Colleges worldwide. SEHR was initiated for educational purposes in the 
+            field of medical recording and started in 2004 at the Univ. of Applied 
+            Services Hamburg. The funds are used for educational purposes and supporting
+            students including scholarships.
+          </p>
+          <!-- push test -->
+          <!-- this works, but is for testing only! .. >
+          <h:form id="frmPush">
+            <p:commandButton value="Click" actionListener="{mobileControl.increment}" update=":vwIntro:frmIntro:outCntMsg"/>
+          </h:form>
+          < ! .. -->
+        </pm:content>
+
+        <pm:footer>
+          <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+            (C) by MDI GmbH build for the SEHR Community
+          </p>
+        </pm:footer>
+      </h:form>
+
+    </pm:page>
+
+    <!-- zones manged by the host -->
+    <pm:page id="vwZones" title="Zones" swatch="a" >
+      <pm:header title="Managed Zones" fixed="true">
+        <p:commandButton id="mnuZonesLeft" value="..." icon="ui-icon-gear" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-left"/>
+        <p:button outcome="pm:vwIntro" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmZones">
+          <p:outputPanel rendered="#{not mobileControl.AMQConnected}">
+            <p style="color:red;font-weight: bold;font-size: 1.2em;">
+              SEHR messaging broker is down!
+            </p>
+            <p style="color:black;font-weight: bold;font-size: 0.8em;">
+              Start the AMQ messaging using the server console!
+            </p>
+          </p:outputPanel>
+          <p:outputPanel rendered="#{mobileControl.AMQConnected}">
+            <p:dataList id="dataZones" 
+                        value="#{mobZoneCtrl.listMonitoredZones}" 
+                        var="zone">
+
+              <h:commandLink action="#{mobZoneCtrl.showZone}" >
+                <f:setPropertyActionListener value="/mobile/zoneList" target="#{mobileControl.xhtmlPage}" />
+                <f:setPropertyActionListener value="#{zone}" target="#{mobZoneCtrl.zoneObject}" />
+                <h:panelGroup>
+                  <h:outputText value="#{zone.zoneid}"/>
+                  <br/>
+                  <h:outputText value="#{zone.title}"/>
+                </h:panelGroup>
+              </h:commandLink>
+
+            </p:dataList>
+          </p:outputPanel>
+        </h:form>
+      </pm:content>
+
+      <p:overlayPanel for="mnuZonesLeft" widgetVar="widZonesLeft" at="left" showEffect="overlay" style="background-color: #FFFDCC;" >
+        <h:form id="frmZonesMenu">
+          <h1 class="overlayMenuTitle">Monitoring</h1>
+          <p:menu>
+            <p:menuitem value="Add Zone..." url="#vwZonesAddMonitor" />
+          </p:menu>
+          <h1 class="overlayMenuTitle">Administration</h1>
+          <p:menu>
+            <p:menuitem value="Registered Zones" outcome="/mobile/zoneList" />
+          </p:menu>
+          <br/>
+        </h:form>
+      </p:overlayPanel>
+    </pm:page>
+    <!-- add zone to monitor  -->
+    <pm:page id="vwZonesAddMonitor" swatch="a">
+      <pm:header title="Add Zone To Monitor" >
+        <p:button styleClass="ui-btn-left ui-btn-inline" value="Back" icon="ui-icon-arrow-l" outcome="pm:vwZones?transition=flip"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmZonesAddMonitor">
+          <p:outputPanel id="pnlZonesAddMonitor">
+            <pm:field>
+              <p:outputLabel for="txtZoneID" value="Zone #(7-Dig.)" />
+              <p:inputText id="txtZoneID" value="#{mobZoneCtrl.zoneId}" placeholder="9999999"  />
+            </pm:field>
+          </p:outputPanel>
+
+          <p:commandButton value="Start Service" action="#{mobZoneCtrl.doActivateSAFQueue()}" 
+                           update=":vwZones:frmZones:dataZones" icon="ui-icon-check"/>
+        </h:form>
+
+      </pm:content>
+    </pm:page>
+
+
+    <!-- center listing -->
+    <pm:page id="vwCenter" title="Center" swatch="a" >
+      <pm:header title="Connected Centers" fixed="true" >
+        <p:commandButton id="mnuCenterLeft" value="..." icon="ui-icon-gear" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-left"/>
+        <p:button outcome="pm:vwIntro" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmCenter">
+          <p:outputPanel rendered="#{not mobileControl.AMQConnected}">
+            <p style="color:red;font-weight: bold;font-size: 1.2em;">
+              SEHR messaging broker is down!
+            </p>
+            <p style="color:black;font-weight: bold;font-size: 0.8em;">
+              Start AMQ service using the server console!
+            </p>
+          </p:outputPanel>
+          <p:outputPanel rendered="#{mobileControl.AMQConnected}">
+            <p:dataList id="dataCenter" 
+                        value="#{mobCenterCtrl.listBoundCenters}" 
+                        var="center">
+
+              <h:commandLink action="#{mobCenterCtrl.showCenterInfo}" >
+                <f:setPropertyActionListener value="#{center}" target="#{mobCenterCtrl.centerObject}" />
+                <h:panelGroup>
+                  <h:outputText value="#{center.netCenterPK.centerid}"/>
+                  <br/>
+                  <h:outputText value="#{center.name}"/>
+                </h:panelGroup>
+              </h:commandLink>
+
+            </p:dataList>
+          </p:outputPanel>
+        </h:form>
+      </pm:content>
+
+      <p:overlayPanel for="mnuCenterLeft" widgetVar="widCenterLeft" at="left" showEffect="overlay" style="background-color: #FFFDCC;" >
+        <h:form id="frmCenterMenu">
+          <h1 class="overlayMenuTitle">Manage Centers</h1>
+          <p:menu>
+            <p:menuitem value="Registered" outcome="/mobile/centerList" />
+          </p:menu>
+          <br/>
+        </h:form>
+      </p:overlayPanel>
+    </pm:page>
+
+    <!-- simple chat messaging -->
+    <pm:page id="vwChat" swatch="a" >
+      <pm:header title="Chat Rooms" fixed="true">
+        <p:button outcome="pm:vwChatSettings" value="..." icon="ui-icon-gear" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-left"/>
+        <p:button outcome="pm:vwIntro" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmChat">
+          <p:outputPanel rendered="#{not mobileControl.AMQConnected}">
+            <p style="color:red;font-weight: bold;font-size: 1.2em;">
+              SEHR messaging broker is down!
+            </p>
+            <p style="color:black;font-weight: bold;font-size: 0.8em;">
+              Start AMQ service using the server console!
+            </p>
+          </p:outputPanel>
+          <p:outputPanel rendered="#{mobileControl.AMQConnected}">
+            <p:dataList id="dataChat" 
+                        value="#{mobChatCtrl.listRooms}" 
+                        var="room">
+
+              <h:commandLink action="#{mobChatCtrl.joinRoom()}" >
+                <f:setPropertyActionListener value="#{room}" target="#{mobChatCtrl.room}" />
+                <h:panelGroup>
+                  <h:outputText value="#{room}"/>
+                </h:panelGroup>
+              </h:commandLink>
+            </p:dataList>
+          </p:outputPanel>
+        </h:form>
+      </pm:content>
+
+    </pm:page>
+
+    <!-- chat settings  -->
+    <pm:page id="vwChatSettings" swatch="a">
+      <pm:header title="Settings" fixed="true">
+        <p:button styleClass="ui-btn-left ui-btn-inline" value="..." icon="ui-icon-arrow-l" outcome="pm:vwChat?transition=slide"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmChatSettings">
+          <p:outputPanel id="pnlChatSettings">
+            <p>Currently there are no specific settings...</p>
+          </p:outputPanel>
+        </h:form>
+      </pm:content>
+    </pm:page>
+    <!-- chat room  -->
+    <pm:page id="vwChatRoom" swatch="a">
+      <h:form id="frmChatRoom">
+        <pm:header title="Room: #{mobChatCtrl.room}" fixed="true">
+          <p:button styleClass="ui-btn-left ui-btn-inline" value="Back" icon="ui-icon-arrow-l" outcome="pm:vwChat?transition=slide"/>
+        </pm:header>
+
+        <pm:content>
+          <p style="color:darkgray;font-size:12px;font-weight: bold;text-align: center;line-height:normal;">Not yet fully implemented.</p>
+         
+          <!--
+          <p:scrollPanel mode="native" style="width:90vw;height:70vh;overflow-y: scroll;">
+          --> 
+          <div class="scrollable" style="height:100px;">
+            <p:dataList id="dataChatMsg" 
+                        value="#{mobChatCtrl.listRoomChatMsg}" 
+                        var="chat">
+              <h:outputText value="#{chat.from}: #{chat.text}" style="background-color: transparent;"/>
+            </p:dataList>
+          </div>
+          <!--
+          </p:scrollPanel>
+          -->
+          <p:outputPanel id="pnlChatRoomSendMsg">
+            <p:inputText id="fldMessage" value="#{mobChatCtrl.text}"/>
+            <p:commandButton value="..." 
+                             actionListener="#{mobChatCtrl.doSendMsg()}" 
+                             update="dataChatMsg pnlChatRoomSendMsg" 
+                             icon="ui-icon-check"
+                             oncomplete="$(document).scrollTop($('ul li:last-child').position().top);"/>
+          </p:outputPanel>
+        </pm:content>
+        <!--
+        <pm:footer fixed="true">
+          <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+            (C) by MDI GmbH build for the SEHR Community
+          </p>
+        </pm:footer>
+        -->
+      </h:form>
+    </pm:page>
+
+    <!-- contacts -->
+    <pm:page id="vwContacts" swatch="a" >
+      <pm:header title="Contacts">
+        <!--
+        <p:button outcome="pm:vwNewContact" value="+" icon="ui-icon-gear" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-left"/>
+        -->
+        <p:button outcome="pm:vwIntro" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline"/>
+      </pm:header>
+
+      <pm:content>
+        <p style="color:red;font-weight: bold;text-align: center;">Not yet implemented.</p>
+      </pm:content>
+
+      <pm:footer>
+        <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+          (C) by MDI GmbH build for the SEHR Community
+        </p>
+      </pm:footer>
+    </pm:page>
+
+    <!-- about view -->
+    <pm:page id="vwAbout" swatch="a" >
+      <pm:header title="About">
+        <p:button outcome="pm:vwIntro" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+
+      <pm:content>
+        <p style="color:black;font-size: 0.8em;">          
+          (C) 2015-2016<br/>
+          Developed by MDI GmbH for the 
+          SEHR Community under the EUPL Licence.
+          <br/><br/>
+          The purpose of this application is to verify SEHR based 
+          applications (and client accesses) for an authorized data 
+          transmission service. Administrators can monitor and manage clients.
+        </p>
+        <div style="width: 100%; height: 100%; position: relative; text-align: center;">
+          <img src="../resources/images/Circle_QualCare_Trsp.png" alt=""/>
+        </div>
+      </pm:content>
+      <pm:footer>
+        <p style="font-size: 0.8em;font-weight: normal;line-height: 0.1em;text-align: center;">
+          (C)MDI GmbH, Hans J Haase <a href='mailto:hansjhaase@mdigmbh.de' style='color:white;'>hansjhaase@mdigmbh.de</a>
+        </p>
+      </pm:footer>
+    </pm:page>
+
+    <!-- settings -->
+    <pm:page id="vwSettings" swatch="a">
+      <pm:header title="Settings">
+        <p:button outcome="pm:vwAbout" value="Über" icon="ui-icon-gear" styleClass="ui-btn-left ui-btn-inline ui-btn-icon-left"/>
+        <p:button outcome="pm:vwIntro" value="X" icon="ui-icon-home" styleClass="ui-btn-right ui-btn-inline ui-btn-icon-right"/>
+      </pm:header>
+
+      <pm:content>
+        <h:form id="frmSettings">
+          <p>
+            The local messaging infrastructure is using the broker(s):  
+          </p>
+          <h:outputText id="txtAMQUrl" value="#{mobileControl.AMQUrl}" />
+          <p:outputPanel rendered="#{not mobileControl.AMQConnected}">
+            <p style="color:red;font-weight: bold;font-size: 1.2em;">
+              SEHR messaging is down!
+            </p>
+            <p style="color:black;font-weight: bold;font-size: 0.8em;">
+              Start the AMQ service using the server console!
+            </p>
+          </p:outputPanel>
+          <p:commandButton value="Reconnect" 
+                           action="#{mobileControl.doReconnect}" 
+                           rendered="#{mobileControl.AMQConnected}" />
+        </h:form>  
+      </pm:content>
+    </pm:page>
+    <!-- for nav purposes -->
+    <div id='viewPage' style='display:none;'>#{mobileControl.viewPage}</div>
+  </h:body>
+
+</html>

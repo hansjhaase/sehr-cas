@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+  <f:view contentType="text/html">
+    <h:head>
+      <f:facet name="first">
+        <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+        <title>SEHR Community Administration Service</title>
+      </f:facet>
+
+      <!-- #{request.contextPath}/ -->
+      <link rel="stylesheet" type="text/css" href="resources/style/sehr.css"/>
+
+    </h:head>
+
+    <h:body>
+
+      <p:layout fullPage="true">
+
+        <p:layoutUnit position="north" size="100" resizable="false" closable="false" collapsible="false">
+          <div style="float: left; margin: 0 5px 0 0;height:75px; width:100px;" >
+            <img src="resources/images/logo4tux.jpg" alt="SEHR" height="98%" width="98%"/>
+          </div>
+          <div style="float: right; margin: 0 0 0 5px; height:75px; width:200px;" >
+            <p style="text-align: right; margin: 0; font-weight: normal;font-size: 0.8em; color:#858585; margin:0;">About (Site Notice)</p>
+          </div>
+          <div style="text-align:center; margin: 0;height:75px;width:100%;">
+            <h1 style="margin:5px 0 0 0;color: black;font-size:1.2em;color: #404040;">SEHR Administration Tool</h1>
+            <h2 style="margin:10px 0 0 0;color: black;font-size:1.0em;color: #404040;">Structured Electronic Health Recording</h2>
+          </div>
+        </p:layoutUnit>
+
+        <p:layoutUnit position="south" size="75" closable="false" collapsible="false">
+          <ui:include src="/inc/footer.xhtml" >...</ui:include> 
+        </p:layoutUnit>
+
+        <p:layoutUnit position="west" size="200" collapsible="false">
+
+          <p:panel header="Login" id="pnlLogin" style="width:95%;">
+            <h:form id="frmLogin" rendered="#{moduleCtrl.loginWebAllowed}">
+              <p:growl id="msgLogin"  showSummary="true" showDetail="false"/>
+              <p:outputLabel for="fldUsername" value="Username"/><br/>
+              <p:inputText value="#{sessionControl.username}" id="fldUsername" required="true" requiredMessage="Type in your name" style="width:75%;">
+                <f:validateLength minimum="6" />
+              </p:inputText>
+              <p:message for="fldUsername" display="tooltip"/><br/>
+              <p:outputLabel for="fldPassword" value="Password"/><br/>
+              <p:password id="fldPassword" value="#{sessionControl.password}" required="true" style="width:75%;">
+                <f:validateLength minimum="6" />
+              </p:password>
+              <p:message for="fldPassword" display="tooltip"/>
+              <br/>
+              <p:commandButton type="submit" value="Login" action="#{sessionControl.login}" update="msgLogin" style="width: 100%; height: 30px; margin-top: 10px;font-size: 0.9em;" />
+              <p:button id="btnRegister" onclick="" value="Register" style="width: 100%; height: 30px; margin-top: 10px;font-size: 0.9em;"/>  
+              <p:tooltip for="btnRegister" showEffect="slide" hideEffect="slide">
+                <p style="margin:0;color: black; font-size:0.8em;font-style: italic;width:400px;">
+                  Sorry, self-registrations not yet implemented. Please call ... for registratiion.
+                </p>
+              </p:tooltip>
+            </h:form>
+            <h:outputText rendered="#{not moduleCtrl.loginWebAllowed}" 
+                          value="Login disabled / not allowed." 
+                          escape="false"/>
+
+          </p:panel>
+
+          <p:panel header="Take a look..." style="width:95%;">
+            <p:button id="btnLink1" onclick="window.open('http://sehr.sf.net', '_blank');" value="SEHR Project" style="width: 100%; height: 30px; margin-top: 10px;font-size: 0.9em;"/>  
+            <p:tooltip for="btnLink1" showEffect="slide" hideEffect="slide">
+              <p style="margin:0;color: black;font-size:0.8em;font-style: italic;width:400px;">
+                SEHR -  an application to manage patients in health care. 
+                <i>Click to open the homepage...</i>
+              </p>
+            </p:tooltip>
+            <p:button id="btnSponsor1" onclick="window.open('http://www.mdigmbh.de', '_blank');" value="MDI GmbH" style="width: 100%; height: 30px; margin-top: 10px;"/>  
+            <p:tooltip for="btnSponsor1" showEffect="slide" hideEffect="slide">
+              <p style="margin:0;color: darkcyan;font-size:0.8em;font-style: italic;width:300px;">
+                The MDI GmbH uses SEHR libraries to exchange data between
+                physicians and pharmaceutical care to improve and save the
+                quality in drug production and administration.
+              </p>
+            </p:tooltip>
+            <!-- no visible link to access zone servers from public pages !!
+              <p:button id="btnSEHRAdmin" onclick="window.open('http://...:8080/sehr-saf-war/index.jsp', '_blank');" value="SEHR Admin" style="width: 100%; height: 30px; margin-top: 10px;"/>  
+              <p:tooltip for="btnSEHRAdmin" showEffect="slide" hideEffect="slide">
+                <p style="margin:0;color: darkcyan;font-size:0.8em;font-style: italic;width:300px;">
+                  Manage the host, the centers and zone settings. <span style="color:red;">For administrators only!</span>
+                </p>
+              </p:tooltip>
+            -->
+          </p:panel>
+          <p:panel header="Project Funding" style="width:95%;">
+            <!-- 
+            p:button id="btnDonate" onclick="window.open('http://www.ifeth.org.uk/projects.html', '_blank');" value="Donation" style="width: 100%; height: 30px; margin-top: 10px;"/>
+            p:tooltip for="btnDonate" showEffect="slide" hideEffect="slide">
+            -->
+            <p style="margin:0;color: darkcyan;font-size:0.8em;font-style: italic;">
+              SEHR is a project run by volonteers and students at various Universities 
+              and Colleges worldwide. SEHR was initiated for educational purposes in the 
+              field of medical recording and started in 2004 at the Univ. of Applied 
+              Services Hamburg. The funds are used for educational material and supporting
+              students to finance conference fees etc.
+            </p>
+            <!-- /p:tooltip> -->
+            <p:outputPanel rendered="#{sessionControl.internetAvailable}">
+              <!-- IFETH, PayPal Donation Button -->
+              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+                <input type="hidden" name="cmd" value="_s-xclick"/>
+                <input type="hidden" name="hosted_button_id" value="TYRBXFUQ2PSCC"/>
+                <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"/>
+                <img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1"/>
+              </form>
+              <!-- End Of IFETH, PayPal Donation Button -->
+            </p:outputPanel>
+          </p:panel>
+        </p:layoutUnit>
+
+        <p:layoutUnit position="center">
+          <ui:include src="/inc/welcome_en.xhtml" >...</ui:include>
+        </p:layoutUnit>
+
+      </p:layout>
+
+    </h:body>
+
+  </f:view>
+</html>
+

@@ -1,0 +1,49 @@
+/* 
+    Document   : jmed
+    Created on : 26.10.2013, 22:25:50
+    Author     : hansjhaase
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+root { 
+  display: block;
+}
+h1 {
+  font-size: 1.2em;
+}
+h2 {
+  font-size: 1.0em;
+}
+.ui-widget .ui-widget {
+  font-size: 12pt;
+}
+.ui-panel .ui-panel-content {
+  padding: 0.1em;
+}
+.ui-growl {
+  left:20px;
+}
+
+.ui-tabs-panel{
+  padding:0;
+}
+
+li {
+  font-weight: normal;
+  font-size: 1.0em;
+}
+p{
+  font-size: 1.0em;
+  line-height: 120%;
+}
+.infobox {
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  background-color: #fcfe9d;
+  border-color: #fafd37;
+  font-weight: normal;
+  font-size: 1.0em;
+  padding:0px;
+  text-align:center;
+}

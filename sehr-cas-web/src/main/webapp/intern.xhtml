@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+  <f:view contentType="text/html">
+    <h:head>
+      <f:facet name="first">
+        <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+        <title>SEHR Community Administration Service (CAS)</title>
+      </f:facet>
+
+      <!-- #{request.contextPath}/ -->
+      <link rel="stylesheet" type="text/css" href="resources/style/sehr.css"/>
+      <link rel='stylesheet' href='http://openlayers.org/en/v3.16.0/css/ol.css' type='text/css' />
+      <script src='http://openlayers.org/en/v3.16.0/build/ol.js'></script>
+
+      <style>
+        .ui-dashboard-column {
+          width: 50%          
+        }
+        .mapcontainer {
+          position: relative;
+          margin-bottom: 10px;
+        }
+        .map {
+          width: 400px;
+          height: 200px;
+        }
+        .mapMarker {
+          width: 14px;
+          height: 14px;
+          border: 1px solid black;
+          border-radius: 7px;
+          background-color: red;
+          opacity: 0.8;
+        }
+        .txtNotifications{
+          font-size: 12px;
+        }
+      </style>
+
+      <script type="text/javascript">
+        var infoStyle;
+        function doConnectedFunction() {
+          infoStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+              anchor: [0.5, 0.5],
+              size: [52, 52],
+              offset: [52, 0],
+              opacity: 1,
+              scale: 1,
+              src: './resources/images/Maennchen-petrol16x16.png'
+            })
+          });
+        }
+        function doNotConnectedFunction() {
+          //
+        }
+
+        var i = new Image();
+        i.onload = doConnectedFunction;
+        i.onerror = doNotConnectedFunction;
+        i.src = 'https://www.paypalobjects.com/de_DE/i/scr/pixel.gif?d=' + escape(Date());
+        // escape(Date()) is necessary to override possibility of image coming from cache
+
+        $(document).ready(function () {
+          //
+        });
+      </script>
+    </h:head>
+
+    <h:body>
+
+      <p:layout fullPage="true">
+
+        <p:layoutUnit position="north" size="100" resizable="false" closable="false" collapsible="false">
+          <div style="float: left; margin: 0 5px 0 0;height:75px; width:100px;" >
+            <img src="resources/images/logo4tux.jpg" alt="SEHR" height="98%" width="98%"/>
+          </div>
+          <div style="float: right; margin: 0 0 0 5px; height:75px; width:200px;" >
+            <p style="text-align: right; margin: 0; font-weight: normal;font-size: 0.8em; color:#858585; margin:0;">About (Site Notice)</p>
+          </div>
+          <div style="text-align:center; margin: 0;height:75px;width:100%;">
+            <h1 style="margin:5px 0 0 0;color: black;font-size:1.2em;color: #404040;">SEHR Administration Tool</h1>
+            <h2 style="margin:10px 0 0 0;color: black;font-size:1.0em;color: #404040;">Structured Electronic Health Recording</h2>
+          </div>
+        </p:layoutUnit>
+
+        <p:layoutUnit position="south" size="75" closable="false" collapsible="false">
+          <ui:include src="/inc/footer.xhtml" >...</ui:include> 
+        </p:layoutUnit>
+
+        <p:layoutUnit position="west" size="200" collapsible="false">
+
+          <p:panel id="pnlMenu" header="#{sessionControl.username}" style="width:95%;">
+            <h:form id="frmMenu">
+              <p:commandButton value="Desktop" action="#{sessionControl.viewPage('/inc/desktop.xhtml')}" 
+                               update=":ws_content" 
+                               style="width: 100%; height: 30px; margin-top: 10px;" />
+              <p:commandButton value="Services" action="#{sessionControl.viewPage('/inc/viewServices.xhtml')}" 
+                               update=":ws_content" 
+                               style="width: 100%; height: 30px; margin-top: 10px;" />
+              <p:commandButton value="LifeCARD" action="#{sessionControl.viewPage('/inc/viewCardsRegistered.xhtml')}" 
+                               update=":ws_content" 
+                               style="width: 100%; height: 30px; margin-top: 10px;" />
+              <p:commandButton value="Logout" action="#{sessionControl.logout}" update="@all" 
+                               style="width: 100%; height: 30px; margin-top: 10px;" />
+            </h:form>
+
+          </p:panel>
+          <!--
+          <p:panel header="Take a look..." style="width:95%;">
+            <p:button id="btnLink1" onclick="window.open('http://sehr.sf.net', '_blank');" value="SEHR Project" style="width: 100%; height: 30px; margin-top: 10px;font-size: 0.9em;"/>  
+            <p:tooltip for="btnLink1" showEffect="slide" hideEffect="slide">
+              <p style="margin:0;color: black;font-size:0.8em;font-style: italic;width:400px;">
+                SEHR -  an application to manage patients in health care. 
+                <i>Click to open the homepage...</i>
+              </p>
+            </p:tooltip>
+            <p:button id="btnSponsor1" onclick="window.open('http://www.mdigmbh.de', '_blank');" value="MDI GmbH" style="width: 100%; height: 30px; margin-top: 10px;"/>  
+            <p:tooltip for="btnSponsor1" showEffect="slide" hideEffect="slide">
+              <p style="margin:0;color: darkcyan;font-size:0.8em;font-style: italic;width:300px;">
+                The MDI GmbH uses SEHR libraries to exchange data between
+                physicians and pharmaceutical care to improve and save the
+                quality in drug production and administration.
+              </p>
+            </p:tooltip>
+          </p:panel>
+          -->
+          <p:panel header="Project Funding" style="width:95%;">
+            <!-- 
+            p:button id="btnDonate" onclick="window.open('http://www.ifeth.org.uk/projects.html', '_blank');" value="Donation" style="width: 100%; height: 30px; margin-top: 10px;"/>
+            p:tooltip for="btnDonate" showEffect="slide" hideEffect="slide">
+            -->
+            <p style="margin:0;color: darkcyan;font-size:0.8em;font-style: italic;">
+              SEHR is a project run by volonteers and students at various Universities 
+              and Colleges worldwide. SEHR was initiated for educational purposes in the 
+              field of medical recording and started in 2004 at the Univ. of Applied 
+              Services Hamburg. The funds are used for educational material and supporting
+              students to finance conference fees etc.
+            </p>
+            <!-- /p:tooltip> -->
+            <p:outputPanel rendered="#{sessionControl.internetAvailable}">
+            <!-- IFETH, PayPal Donation Button -->
+            <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+              <input type="hidden" name="cmd" value="_s-xclick" />
+              <input type="hidden" name="hosted_button_id" value="TYRBXFUQ2PSCC" />
+              <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" />
+              <img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1" />
+            </form>
+            <!-- End Of IFETH, PayPal Donation Button -->
+            </p:outputPanel>
+          </p:panel>
+        </p:layoutUnit>
+
+        <p:layoutUnit position="center" style="margin:0; padding:0;">
+          <p:panel id="ws_content" style="margin:0; padding:0;border:0;">
+            <ui:include src="#{sessionControl.page}" >...</ui:include>
+          </p:panel>
+        </p:layoutUnit>
+
+      </p:layout>
+
+    </h:body>
+
+  </f:view>
+</html>
+

@@ -1,0 +1,369 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <style>
+      .lifecard {
+        background-image: url('resources/images/LifeCard-V8.png') !important;
+      }
+      
+      .column20{width:20%;height:auto;}
+      .column60{width:60%;height:auto;}
+      .column80{width:80%;height:auto;}
+      .column100{width:100%;height:auto;}
+      .noTDborder td {border-style: hidden !important;}
+    </style>
+    <p:panel header="LifeCard(R) Production #{cardProdCtrl.cardNumber}" closable="true" style="margin: 0; padding: 0;">
+
+      <p:ajax event="close" listener="#{cardProdCtrl.onClose}" update=":ws_content" />
+
+      <h:form id="frmCardProdWiz">
+        <p:growl id="grwlCardProdWiz" life="2000" showDetail="true" />
+        <p:outputPanel rendered="#{empty cardProdCtrl.lcMain}">
+          <p class="errorbox">Error: No card registration object!</p>
+        </p:outputPanel>
+        <p:wizard flowListener="#{cardProdCtrl.onFlowProcess}" 
+                  rendered="#{not empty cardProdCtrl.lcMain}">
+
+          <p:tab id="tbCardHolder" title="Card Holder">
+            <p:panel>
+              <p:messages />
+              <p:outputPanel rendered="#{cardProdCtrl.lcMain.prsid lt 0}">
+                <p class="errorbox">Missing person record! Please check and add the data.</p>
+              </p:outputPanel>
+              
+              <h:panelGrid id="pnlCardHolder" columns="2" columnClasses="grid, grid">
+                <h:panelGrid columns="2" columnClasses="label, value">
+                  <h:outputText value="Firstname: *" />
+                  <p:inputText value="#{cardProdCtrl.lcMain.firstname}" 
+                               required="true" label="Firstname"/>
+
+                  <h:outputText value="Middle:" />
+                  <p:inputText value="#{cardProdCtrl.lcMain.middle}" label="Middle"/>
+
+                  <h:outputText value="Lastname: *" />
+                  <p:inputText value="#{cardProdCtrl.lcMain.surname}" 
+                               required="true" label="Lastname"/>
+
+                  <h:outputText value="DoB (yyyy-MM-yy): *" />
+                  <p:calendar value="#{cardProdCtrl.lcMain.dob}" 
+                              navigator="true" yearRange="c-150:c+0"
+                              showOn="button" mask="true"                            
+                              pattern="yyyy-MM-dd" timeZone="Europe/Berlin" 
+                              required="true" />
+                </h:panelGrid>
+                <h:panelGrid columns="2" columnClasses="label, value">
+                  <h:outputText value="Firstname: *" />
+                  <p:inputText value="#{cardProdCtrl.prsMain.firstname}" 
+                               required="true" label="Firstname"/>
+
+                  <h:outputText value="Lastname: *" />
+                  <p:inputText value="#{cardProdCtrl.prsMain.lastname}" label="Lastname"/>
+
+                  <h:outputText value="Skip to confirmation: " />
+                  <h:selectBooleanCheckbox value="#{cardProdCtrl.skip}" />
+                </h:panelGrid>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbPatientAssignment" title="Managed Care">
+            <p:panel>
+              <p:messages />
+              <h:panelGrid id="pnlPatientAssignment" columns="2" columnClasses="grid, grid">
+                <p:panelGrid columns="3" styleClass="noTDborder">
+                  <p:column>
+                    <h:outputText value="SHID:" />
+                  </p:column>
+                  <p:column>
+                    <p:autoComplete id="fldHostID" dropdown="true" 
+                                    forceSelection="true"
+                                    value="#{cardProdCtrl.lcMain.hostid}" 
+                                    completeMethod="#{cardProdCtrl.cplHostID}" 
+                                    style="width: 80%;"
+                                    size="14"/>
+                  </p:column>
+                  <p:column></p:column>
+
+                  <p:column>
+                    <h:outputText value="EHN:" />
+                  </p:column>
+                  <p:column>
+                    <h:outputText value="#{cardProdCtrl.lcMain.EHNDomain}" 
+                                  styleClass="outputLabel" rendered="#{not empty cardProdCtrl.lcMain.EHNDomain}"/>
+                    <p:inputText value="#{cardProdCtrl.lcMain.EHNDomain}" 
+                                 required="true" label="EHNDomain"
+                                 rendered="#{empty cardProdCtrl.lcMain.EHNDomain}"/>
+                  </p:column>
+                  <p:column></p:column>
+
+                  <h:outputText value="Country:" />
+                  <h:outputText value="#{cardProdCtrl.lcMain.country}" styleClass="outputLabel"/>
+                  <p:column></p:column>
+
+                  <h:outputText value="Zone ID:" />
+                  <p:autoComplete id="fldZoneSelect" 
+                                  maxResults="10" minQueryLength="1"
+                                  value="#{cardProdCtrl.netZones}"
+                                  dropdown="true" 
+                                  var="netZones"
+                                  completeMethod="#{cardProdCtrl.cplZoneId}"
+                                  itemValue="#{netZones}"
+                                  itemLabel="#{netZones.zoneid}"
+                                  forceSelection="true"
+                                  converter="NetZonesConverter"
+                                  size="7" maxlength="7"
+                                  >
+                    <p:column>
+                      <h:outputText value="#{netZones.title}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{netZones.zoneid}" />
+                    </p:column>
+                    <p:ajax event="itemSelect" 
+                            listener="#{cardProdCtrl.handleZoneSelect}" 
+                            update="grwlCardProdWiz pnlPatientAssignment"/>
+                    <!-- f:converter converterId="NetZonesConverter"/ -->
+                  </p:autoComplete>
+                  <p:column></p:column>
+
+                  <h:outputText value="Center ID:" />
+                  <p:autoComplete id="fldCenterSelect" 
+                                  maxResults="10" minQueryLength="1"
+                                  value="#{cardProdCtrl.netCenter}"
+                                  dropdown="true" 
+                                  var="netCenter"
+                                  completeMethod="#{cardProdCtrl.cplCenterId}"
+                                  itemValue="#{netCenter}"
+                                  itemLabel="#{netCenter.netCenterPK.centerid}"
+                                  forceSelection="true"
+                                  converter="NetCenterConverter"
+                                  size="7" maxlength="7"> 
+                    <p:column>
+                      <h:outputText value="#{netCenter.name}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{netCenter.netCenterPK.centerid}" />
+                    </p:column>>
+                    <p:ajax event="itemSelect" listener="#{cardProdCtrl.handleCenterSelect}" 
+                            update="grwlCardProdWiz pnlPatientAssignment"/>
+                  </p:autoComplete>
+                  <p:column></p:column>
+
+                  <h:outputLabel for="fldPatientID" value="Patient ID: *" />
+                  <p:inputText id="fldPatientID"
+                               value="#{cardProdCtrl.lcMain.patid}" 
+                               required="true" label="Patient ID"
+                               size="8" maxlength="8"
+                               />
+                  <p:commandButton actionListener="#{cardProdCtrl.alCheckPatIdent}" 
+                                   icon="ui-icon-bookmark" 
+                                   update="grwlCardProdWiz" 
+                                   oncomplete="alert('Request sent...');">
+                    <f:setPropertyActionListener value="#{cardProdCtrl.lcMain}" target="#{cardProdCtrl.lcMain}" />
+                  </p:commandButton>
+
+                  <h:outputText value="Skip to confirmation: " />
+                  <h:selectBooleanCheckbox value="#{cardProdCtrl.skip}" />
+                  <p:column></p:column>
+
+                </p:panelGrid>
+
+                <p:panel style="margin-left:50px;">
+                  <p style="font-size:11pt;color:black;">
+                    The <b>SHID</b> (SEHR Host ID) is used by the SEHR Directory 
+                    Services to link hosts offering SEHR services. 
+                    This value should not be changed.<br/>
+                    The <b>EHN</b> (electronic health network) and <b>country</b> 
+                    values depend on the zone settings and cannot be changed.
+                  </p>
+                  <ol>
+                    <li>Select the zone (health care community) that manages the 
+                      patient and that is managed by this host. Do not use another 
+                      zone without knowledge about it's centers.</li>
+                    <li>Select a center of the zone that is responsible for the 
+                      clinical pathway of the patient and that has an EHR 
+                      base with an unique ID of the patient.</li>
+                    <li>Type in the patient ID of the EHR base using a written 
+                      form. Alternatively, a request for the number (ID) can be 
+                      done using surname, firstname and DoB from the first tab. 
+                      The center must be 'online' and connected to the 
+                      messaging service of the zone).</li>
+                  </ol>
+                </p:panel>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbCardPrinting" title="Personalization">
+            <p:panel>
+              <p:messages />
+              <h:panelGrid id="fldCardPrinting" columns="2" columnClasses="grid, grid">
+
+                <h:panelGrid columns="2" columnClasses="label, value">
+
+                  <h:outputText value="Disease (ICD10 coded)" />
+                  <p:inputText id="fldProblem" 
+                               value="#{cardProdCtrl.lcItem.problem}" 
+                               label="Disease (ICD10 coded)"/>
+
+                  <h:outputText value="Identification" />
+                  <p:selectOneMenu id="fldIdentityType" 
+                                   value="#{cardProdCtrl.keyValueItem}"
+                                   var="kvi"
+                                   converter="IdentityTypeConverter" >
+                    <f:selectItems value="#{cardProdCtrl.listIdentTypes}"
+                                   var="kvi" itemLabel="#{kvi.value}" itemValue="#{kvi}"
+                                   />
+                    <p:column>
+                      <h:outputText value="#{kvi.value}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{kvi.key}" />
+                    </p:column>
+                  </p:selectOneMenu>
+
+                  <h:outputText value="Identification Number" />
+                  <p:inputText id="fldIdentityNumber" 
+                               value="#{cardProdCtrl.lcItem.identNo}" 
+                               label="Identification Number"/>
+
+                  <h:outputText value="ICE Contact name" />
+                  <p:inputText id="fldEMConFQName" 
+                               value="#{cardProdCtrl.lcItem.EMConFQName}" 
+                               label="ICE Contact name"/>
+
+                  <h:outputText value="ICE Contact Phone" />
+                  <p:inputText id="fldEMConPhone" 
+                               value="#{cardProdCtrl.lcItem.EMConPhone}" 
+                               label="ICE Contact Phone"/>
+
+                </h:panelGrid>
+                <p:panel style="margin-left:50px;">
+                  * TODO help *
+                </p:panel>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbCardProvider" title="Card App">
+            <p:panel>
+              <p:messages />
+              <h:panelGrid id="pnlCardProvider" columns="2" columnClasses="grid, grid">
+
+                <h:panelGrid columns="2" columnClasses="label, value">
+                  <h:outputText value="Issuer (Center ID):" />
+                  <p:autoComplete id="fldIssuerSelect" 
+                                  maxResults="10" minQueryLength="1"
+                                  value="#{cardProdCtrl.issuer}"
+                                  dropdown="true" 
+                                  var="issuer"
+                                  completeMethod="#{cardProdCtrl.cplCenterId}"
+                                  itemValue="#{issuer}"
+                                  itemLabel="#{issuer.centerid}"
+                                  forceSelection="true"
+                                  converter="NetCenterConverter"
+                                  size="7" maxlength="7"> 
+                    <p:column>
+                      <h:outputText value="#{issuer.name}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{issuer.centerid}" />
+                    </p:column>>
+                    <p:ajax event="itemSelect" listener="#{cardProdCtrl.handleIssuerSelect}" 
+                            update="grwlCardProdWiz pnlCardProvider"/>
+                  </p:autoComplete>
+                  
+                  <h:outputText value="AppToken (Card App ID)" />
+                  <p:inputText id="fldAppToken" 
+                               value="#{cardProdCtrl.lcCad.cai}" 
+                               label="AppToken/Provider"/>
+                  <h:outputText value="Card App Identifier: Card App Type" />
+                  <p:inputText id="fldcaiCat" 
+                               value="#{cardProdCtrl.lcCad.caiCat}" 
+                               label="caiCat"/>
+                  <h:outputText value="Card Issuer Identifier: CountryCode" />
+                  <p:inputText id="fldciiCc" 
+                               value="#{cardProdCtrl.lcCad.ciiCc}" 
+                               label="ciiCc"/>
+                  <h:outputText value="Card Vendor ID:" />
+                  <p:inputText id="fldVendorId" 
+                               value="#{cardProdCtrl.lcCad.cvID}" 
+                               label="cvID"/>
+                  <h:outputText value="Card SerNo:" />
+                  <p:inputText id="fldCardSerNo" 
+                               value="#{cardProdCtrl.lcCad.cvSer}" 
+                               label="cvSer"/>
+                </h:panelGrid>
+                <p:panel style="margin-left:50px;">
+                  <p>Use /sys/kernel/debug/usb/device to get VendorID and 
+                    SerialNo</p>
+                </p:panel>
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+
+          <p:tab id="tbConfirm" title="Confirmation">
+            <p:panel>
+              <h:panelGrid id="pnlConfirm" columns="2" columnClasses="grid,grid">
+                <h:panelGrid columns="2" columnClasses="label, value">
+                  <h:outputText value="Card Holder: " />
+                  <h:outputText value="#{cardProdCtrl.lcMain.surname}, #{cardProdCtrl.lcMain.firstname}" styleClass="outputLabel"/>
+                  <h:outputText value="Card No.: " />
+                  <h:outputText value="#{cardProdCtrl.lcCad.ci}" styleClass="outputLabel"/>
+                  <h:outputText value="Issuer: " />
+                  <h:outputText value="#{cardProdCtrl.issuer.name} (#{cardProdCtrl.lcCad.ciiIi})" styleClass="outputLabel"/>
+                  <h:outputText value="Card App: " />
+                  <h:outputText value="#{cardProdCtrl.lcCad.cai}" styleClass="outputLabel"/>
+
+                  <p:selectOneMenu id="fldLcCadStatus" 
+                                   value="#{cardProdCtrl.lcCadStatus}"
+                                   var="kviStatus"
+                                   converter="StatusTypeConverter" >
+                    <p:ajax event="change" update="pnlConfirm"
+                            listener="#{cardProdCtrl.statusSelectionChanged}" />
+                    <f:selectItems value="#{cardProdCtrl.listStatusTypes}"
+                                   var="kviStatus" 
+                                   itemLabel="#{kviStatus.value}" 
+                                   itemValue="#{kviStatus}"
+                                   />
+                    <p:column>
+                      <h:outputText value="#{kviStatus.value}" />
+                    </p:column>
+                    <p:column>
+                      <h:outputText value="#{kviStatus.key}" />
+                    </p:column>
+                  </p:selectOneMenu>
+
+                </h:panelGrid>
+                <p:panel style="margin-left:50px;">
+                  <!-- see http://stackoverflow.com/questions/14232339/how-to-bind-dynamic-content-using-pmedia -->
+                  <p:graphicImage value="#{cardsRegVwCtrl.cardImage}" 
+                                  rendered="#{cardProdCtrl.lcItem.lcid ge 0}">
+                    <f:param name="lcid" value="#{cardProdCtrl.lcItem.lcid}" />
+                  </p:graphicImage>
+                  <br/>
+                  <p:commandButton value="Download Overlay" title="Overlay Image for Printing" 
+                                   ajax="false">
+                    <p:fileDownload value="#{downloadController.getCardOverlayImage(cardProdCtrl.lcItem)}"/>
+                    <f:param name="lcid" value="#{cardProdCtrl.lcItem.lcid}" />
+                  </p:commandButton>
+                </p:panel>        
+                <h:outputText value="Confirm Production and Status"/>
+                <p:commandButton value="Confirm" 
+                                 actionListener="#{cardProdCtrl.onSaveLcCad()}" 
+                                 update="grwlCardProdWiz" process="@this"/>
+
+              </h:panelGrid>
+            </p:panel>
+          </p:tab>
+        </p:wizard>
+      </h:form>
+    </p:panel>
+  </html>
+</ui:composition>

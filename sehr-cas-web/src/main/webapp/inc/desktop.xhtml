@@ -1,0 +1,230 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<ui:composition xmlns:ui="http://java.sun.com/jsf/facelets">
+  <html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui">
+
+    <div style="height:500px;">
+
+      <h:form id="frmDesktop">
+        <p:growl id="msgDesktop" showDetail="true" />
+
+        <p:dashboard id="board" model="#{desktopCtrl.model}">
+          <p:ajax event="reorder" listener="#{desktopCtrl.handleReorder}" update="msgDesktop" />
+
+          <p:panel id="zones" header="Zones" style="width:auto;">
+
+            <f:facet name="actions">
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default" 
+                             actionListener="#{sessionControl.viewPage('/inc/viewZones.xhtml')}">
+                <h:outputText styleClass="ui-icon ui-icon-newwin" />
+              </h:commandLink>
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default">
+                <h:outputText styleClass="ui-icon ui-icon-help" /></h:commandLink>
+            </f:facet>
+            <p style="font-size: 10pt;font-family: Arial;">
+              Local zone ID is <h:outputText value="#{moduleCtrl.localZoneID}"/>.
+              The following list of zones have been bound (linked) to this zone. 
+              Using the SEHR XNET infrastructure this zone can send/receive 
+              messages with linked zones. To add another group of health care 
+              providers (a regional zone of care) use the 
+              <p:commandLink actionListener="#{sessionControl.viewPage('/inc/viewZones.xhtml')}" 
+                             update="ws_content">zone administration</p:commandLink>.
+            </p>
+            <p:outputPanel rendered="#{moduleCtrl.domain.endsWith('e-hn.org')}">
+              <p style='font-size: 10pt;font-family: Arial;'>
+                To look for new zones that have been registered by the IFETH 
+                institute use the zone view and search the SEHR context. 
+              </p>  
+            </p:outputPanel>
+            <p:dataList value="#{zoneViewCtrl.registeredZones}" var="zone" 
+                        type="unordered" paginator="true" rows="5" paginatorPosition="bottom">
+              <f:facet name="header">
+                Registered Zones
+              </f:facet>
+              <h:outputText value="#{zone.zoneid}: #{zone.title}" 
+                            rendered="#{zone.zoneid != moduleCtrl.localZoneID}" ></h:outputText> 
+              <p:outputPanel rendered="#{zone.zoneid == moduleCtrl.localZoneID}">
+                <span style='color:darkgray;font-size:11pt; font-weight:bold;'>
+                  <h:outputText value="#{zone.zoneid}: #{zone.title}"/> (This zone)
+                </span>
+              </p:outputPanel>
+            </p:dataList>
+
+          </p:panel>
+
+          <p:panel id="centers" header="Centers" style="width:auto;">
+            <f:facet name="actions">
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default" 
+                             actionListener="#{sessionControl.viewPage('/inc/viewCenters.xhtml')}">
+                <h:outputText styleClass="ui-icon ui-icon-newwin" />
+              </h:commandLink>
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default"><h:outputText styleClass="ui-icon ui-icon-help" /></h:commandLink>
+            </f:facet>
+            <p>The following centers (facilities) are bound to this zone (ID <h:outputText value="#{centerViewCtrl.zoneId}"/>).</p>
+            <p:dataList value="#{centerViewCtrl.registeredCenters}" var="center" 
+                        type="unordered" paginator="true" rows="5" paginatorPosition="bottom">
+              <f:facet name="header">
+                Registered Centers
+              </f:facet>
+              <h:outputText value="#{center.netCenterPK.centerid}: #{center.name}" ></h:outputText>   
+            </p:dataList>
+          </p:panel>
+
+          <p:panel id="notes" header="Notes" style="width:auto;">
+            <h:outputText value="There are no new posts..." styleClass="txtNotifications"  />
+          </p:panel>
+
+          <p:panel id="apps" header="EHR Applications" style="width:auto;">
+            <f:facet name="actions">
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default" 
+                             actionListener="#{sessionControl.viewPage('/inc/viewModules.xhtml')}" >
+                <h:outputText styleClass="ui-icon ui-icon-newwin" />
+              </h:commandLink>
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default"><h:outputText styleClass="ui-icon ui-icon-help" /></h:commandLink>
+            </f:facet>
+
+            <p:dataList value="#{moduleViewCtrl.registeredModules}" var="module" 
+                        type="unordered" paginator="true" rows="5" paginatorPosition="bottom">
+              <f:facet name="header">
+                Registered Applications
+              </f:facet>
+              #{module.pik}: #{module.name}
+            </p:dataList>
+          </p:panel>
+
+          <p:panel id="users" header="Users" style="width:auto;">
+            <f:facet name="actions">
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default" 
+                             actionListener="#{sessionControl.viewPage('/inc/viewUsers.xhtml')}" >
+                <h:outputText styleClass="ui-icon ui-icon-newwin" />
+              </h:commandLink>
+              <h:commandLink styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default"><h:outputText styleClass="ui-icon ui-icon-help" /></h:commandLink>
+            </f:facet>
+            <p>
+              Registered user accounts at this community of health care. 
+              To get a list of patients with a registered LifeCARD(R) or 
+              compatible health card use the user panel and select "LifeCRD(R) registrations".
+            </p>
+            <p:dataList value="#{userViewCtrl.listUsers}" var="user" 
+                        type="unordered" paginator="true" rows="5" paginatorPosition="bottom">
+              <f:facet name="header">
+                Registered users
+              </f:facet>
+              #{user.toString()}
+            </p:dataList>
+          </p:panel>
+
+          <p:panel id="status" header="Status" style="width:auto;">
+            <h:outputText value="EHN Domain: #{moduleCtrl.domain}"/>
+            <p:graphicImage id="imgPanelInfoEHN" name="images/infoblue16x16.png" 
+                            style="cursor:pointer" title="This zone is part of the EHN" />
+            <p:overlayPanel id="imgPanelEHN" for="imgPanelInfoEHN" showEffect="blind" 
+                            hideEffect="explode" showEvent="mouseover" hideEvent="mousedown"
+                            dismissable="false" showCloseIcon="true">
+              <p:imageSwitch effect="fade" style="width:100%;height:1005%;">
+                <p:graphicImage name="images/SEHR_de_e-hn_org_2015.jpg" width="300" />
+              </p:imageSwitch>
+            </p:overlayPanel>
+            <br/>
+            <h:outputText value="Local Zone ID: #{moduleCtrl.localZoneID}"/><br/>
+            <h:outputText value="Local Domain: #{moduleCtrl.operatingDomain}"/><br/>
+            <h:outputText value="Local AMQ Broker URL: #{moduleCtrl.localAMQBrokerURL}"/>
+            <p:graphicImage id="imgPanelInfo1" name="images/infoblue16x16.png" 
+                            style="cursor:pointer" title="The local AMQ service is part of the infrastructure of a regional group of members to share EHR" />
+            <p:overlayPanel id="imgPanel" for="imgPanelInfo1" showEffect="blind" 
+                            hideEffect="explode" showEvent="mouseover" hideEvent="mousedown"
+                            dismissable="false" showCloseIcon="true">
+              <p:imageSwitch effect="fade" style="width:100%;height:1005%;">
+                <p:graphicImage name="images/SEHR_ZoneRelatedMessaging.png" width="300" />
+              </p:imageSwitch>
+            </p:overlayPanel>
+
+            <!--
+            <p:lightBox styleClass="imagebox" id="lbInfo1">  
+              <h:outputLink value="images/infoblue16x16.png" title="J-MED">  
+                <h:graphicImage name="images/SEHR_ZoneRelatedMessaging.png" id="imgInfo1" style="height: 75%; width: 75%" />  
+              </h:outputLink>
+            </p:lightBox>
+            -->
+            <br/>
+            <h:outputText value="#{moduleCtrl.serviceQueueStatus}" escape="false"/>
+            <p:outputPanel rendered="#{not moduleCtrl.localServiceQueueActive}">
+              <p:commandButton value="Start Service" 
+                               actionListener="#{desktopCtrl.alActivateLocalServiceQueue}" 
+                               update="msgDesktop status" 
+                               title="Start local messaging service..." /> 
+            </p:outputPanel>
+            <br/>
+            <h:outputText value="SEHR Messaging Bus (XNET):"/><br/>
+            <h:outputText value="#{moduleCtrl.XNetStatus}" escape="false"/><br/>
+            <p:outputPanel rendered="#{moduleCtrl.XNetConnected}">
+              <p:autoComplete id="fldTestXnetMsg2CenterId" dropdown="true" 
+                              value="#{desktopCtrl.centerId}" 
+                              completeMethod="#{desktopCtrl.completeCID}" 
+                              size="7"/>
+
+              <!-- p:inputText id="fldTestXnetMsg2CenterId2" value="{desktopCtrl.centerId}" / -->
+              <p:commandButton value="Test" action="#{desktopCtrl.testXNetInbox}" 
+                               update="msgDesktop status" 
+                               title="Sends a default text for testing purposes..." />
+              <br/>
+              <p:commandButton value="Control" 
+                               actionListener="#{desktopCtrl.controlCommand}" 
+                               update="msgDesktop status"
+                               disabled="true"/>
+              <p:autoComplete id="acRoutes" 
+                              dropdown="true" 
+                              var="route" 
+                              minQueryLength="2" 
+                              queryDelay="500" 
+                              itemLabel="#{desktopCtrl.getRouteInfo(route)}" 
+                              itemValue="#{route}" 
+                              completeMethod="#{desktopCtrl.completeRoutes}" 
+                              converter="#{desktopCtrl}" 
+                              style="margin-right: 40px;">
+                <f:facet name="itemtip">
+                  <h:panelGrid>
+                    <f:facet name="header">
+                      <h:outputText value="#{desktopCtrl.getRouteInfo(route)}"/>
+                    </f:facet>
+                    <h:outputText value="#{desktopCtrl.getRouteDetails(route)}"/>
+                  </h:panelGrid>
+                </f:facet>
+                <p:ajax event="itemSelect" listener="#{desktopCtrl.handleSelect}" update="msgDesktop"></p:ajax>
+              </p:autoComplete>
+              <p:inputText id="fldcommands" value="#{desktopCtrl.controlCommand}" />(start or stop)
+            </p:outputPanel>
+            <p:outputPanel rendered="#{not moduleCtrl.XNetConnected}">
+              <p:commandButton value="Start XNet..." 
+                               action="#{moduleCtrl.startXNet()}" 
+                               update="msgDesktop status stsXNet" 
+                               rendered="#{moduleCtrl.AMQConnected}"/>
+              <p:outputPanel rendered="#{not moduleCtrl.AMQConnected}">
+                <p style="color:red;" >
+                  No local (zone related) messaging broker service!<br/>
+                  There will be no EHR data transfer inside this zone<br/>
+                  while the AMQ is shutdown. <br/>
+                  Use server console to start the AMQ service.</p>
+              </p:outputPanel>
+            </p:outputPanel>
+            <h:outputText value="#{moduleCtrl.topLevelCheck}" escape="false"/>
+
+          </p:panel>
+        </p:dashboard>
+
+        <div style="clear:both" />
+      </h:form>
+      <script type="text/javascript">
+        function handleNotification(data) {
+          $('.txtNotifications').text(data);
+        }
+      </script>
+      <p:socket onMessage="handleNotification" channel="/notification" />
+    </div>
+  </html>
+</ui:composition>

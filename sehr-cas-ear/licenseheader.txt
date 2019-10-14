@@ -1,0 +1,8 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}(C) 2015 IFETH & MDI GmbH
+${licensePrefix}
+<#if licenseLast??>
+${licenseLast}
+</#if>

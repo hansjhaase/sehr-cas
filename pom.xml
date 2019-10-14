@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.ifeth.sehr.p1507291734</groupId>
+  <artifactId>sehr-cas</artifactId>
+  <version>0.2</version>
+  <packaging>pom</packaging>
+  <name>sehr-cas</name>
+  <modules>
+    <module>sehr-cas-ejb</module>
+    <module>sehr-cas-ear</module>
+    <module>sehr-cas-web</module>
+  </modules>
+  <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+    <!--
+    <sehr.core.version>6.4.0.1603271331</sehr.core.version>
+    <sehr.intrasec.version>6.4.0.1603271321</sehr.intrasec.version>
+    -->
+  </properties>
+  <description>Merging sehr-saf(GF3) and sehr-saf-tool; based on SEHR core 6.4.x</description>
+</project>

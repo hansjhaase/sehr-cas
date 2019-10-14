@@ -1,0 +1,30 @@
+/* 
+    Document   : mobile.css
+    Created on : 31.07.2015
+    Author     : hansjhaase
+    Description:
+        additional css fixings to jquery mobile/HTML5 and SEHR specialities
+*/
+
+/* places on bottom footer */
+.ui-content
+{
+    margin-bottom:75px; /* Set this to whatever your footer size is... */
+}
+
+.ui-footer {
+    position: absolute !important;
+    bottom: 0;
+    width: 100%;
+}
+
+.infobox {
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  background-color: #fcfe9d;
+  border-color: #fafd37;
+  font-weight: normal;
+  font-size: 1.0em;
+  padding:0px;
+  text-align:center;
+}
