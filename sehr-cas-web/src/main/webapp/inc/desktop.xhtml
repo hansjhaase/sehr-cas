@@ -157,7 +157,14 @@
               <p:commandButton value="Start Service" 
                                actionListener="#{desktopCtrl.alActivateLocalServiceQueue}" 
                                update="msgDesktop status" 
-                               title="Start local messaging service..." /> 
+                               title="Start local messaging service..." 
+                               rendered="#{moduleCtrl.AMQConnected}"/> 
+            </p:outputPanel>
+            <p:outputPanel rendered="#{not moduleCtrl.AMQConnected}">
+              <p style="color:red;" >
+                No local (zone related) messaging broker service!<br/>
+                There will be no EHR data transfer while the AMQ is shutdown. <br/>
+                Use server console to start the AMQ service.</p>
             </p:outputPanel>
             <br/>
             <h:outputText value="SEHR Messaging Bus (XNET):"/><br/>

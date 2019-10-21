@@ -15,8 +15,8 @@
 
       <!-- #{request.contextPath}/ -->
       <link rel="stylesheet" type="text/css" href="resources/style/sehr.css"/>
-      <link rel='stylesheet' href='http://openlayers.org/en/v3.16.0/css/ol.css' type='text/css' />
-      <script src='http://openlayers.org/en/v3.16.0/build/ol.js'></script>
+      <link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.0.1/css/ol.css' type='text/css' />
+      <script src='https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.0.1/build/ol.js'></script>
 
       <style>
         .ui-dashboard-column {
@@ -144,7 +144,7 @@
               students to finance conference fees etc.
             </p>
             <!-- /p:tooltip> -->
-            <p:outputPanel rendered="#{sessionControl.internetAvailable}">
+            <p:outputPanel rendered="#{moduleCtrl.internetAvailable}">
             <!-- IFETH, PayPal Donation Button -->
             <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
               <input type="hidden" name="cmd" value="_s-xclick" />

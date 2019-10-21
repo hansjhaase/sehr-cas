@@ -7,9 +7,12 @@ import java.io.IOException;
 import javax.inject.Named;
 import javax.enterprise.context.SessionScoped;
 import java.io.Serializable;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -307,24 +310,6 @@ public class SessionControl implements Serializable {
     this.lcMain = lcMain;
   }
 
-  public boolean isInternetAvailable() {
-    return isHostAvailable("google.com", 80) || isHostAvailable("paypal.com", 80);
-    // || isHostAvailable("de.e-hn.org");
-  }
-
-  private boolean isHostAvailable(String hostName, int port) {
-    try (Socket socket = new Socket()) {
-      InetSocketAddress socketAddress = new InetSocketAddress(hostName, port);
-      socket.connect(socketAddress, 3000);
-      return true;
-    } catch (UnknownHostException | SocketTimeoutException ex) {
-      Logger.getLogger(SessionControl.class.getName()).log(Level.SEVERE, null, ex.getMessage());
-    } catch (IOException ex) {
-      Logger.getLogger(SessionControl.class.getName()).log(Level.SEVERE, null, ex.getMessage());
-    }
-    return false;
-  }
-
   /**
    * @return the statusNetZones
    */
@@ -332,17 +317,41 @@ public class SessionControl implements Serializable {
     if (statusNetZones.isEmpty()) {
       List<NetZones> list = ejbZoneAdmin.listActiveZones();
       for (NetZones z : list) {
-        //sehr-cas is currently a pure GF app on port 8080
         int val = 0;
-        if (isHostAvailable(z.getPriip(), 8080)) {
-          val = val | Constants.maskIsURLSEHRWeb;
+        /* +++ removed: this takes too long at this point...
+        try {
+          URL url = new URL("https://" + z.getPriip() + ":8181");
+          HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+          huc.setRequestMethod("HEAD");
+          huc.setConnectTimeout(1000);
+          int responseCode = huc.getResponseCode();
+          if (responseCode != 404) {
+            val = val | Constants.maskIsURLSEHRWebSSL;
+          } else {
+            url = new URL("http://" + z.getPriip() + ":8080");
+            huc = (HttpURLConnection) url.openConnection();
+            responseCode = huc.getResponseCode();
+            if (responseCode != 404) {
+              val = val | Constants.maskIsURLSEHRWeb;
+            } else {
+              if (isHostAvailable(z.getPriip())) {
+                val = val | Constants.maskIsURLSEHRWeb;
+              }
+            }
+          }
+        } catch (Exception ex) {
         }
         //TODO check and add LDAP status using mask
-        Log.finer(SessionControl.class.getName() + ":statusNetZones():val=" + Integer.toBinaryString(val));
+        */
+        Log.finer(SessionControl.class.getName() + ":statusNetZones():" + z.getTitle() + ",val=" + Integer.toBinaryString(val));
         statusNetZones.put(z, val);
       }
     }
     return statusNetZones;
+  }
+
+  public void addStatusNetZones(NetZones z, int val) {
+    statusNetZones.put(z, val);
   }
 
   /**
@@ -351,7 +360,7 @@ public class SessionControl implements Serializable {
    * @param refresh update the contents / list
    * @return
    */
-  public List<NetZones> activeMonitoredZones(boolean refresh) {
+  public List<NetZones> listMonitoredZones(boolean refresh) {
 
     FacesContext fctx = FacesContext.getCurrentInstance();
     ExternalContext ectx = fctx.getExternalContext();
@@ -376,7 +385,6 @@ public class SessionControl implements Serializable {
         }
       } else {
         Log.info(SessionControl.class.getName() + ":activeMonitoredZones():No monitored zones (no 'SAFQueueListener').");
-
       }
     }
     return lMonitoredZones;

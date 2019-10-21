@@ -52,8 +52,8 @@ public class ContextListener implements ServletContextListener,
   private Properties p;
   private int debug = 0;
   //used for receiving center p2p (queue) messages and topic related stuff
-  private ActiveMQConnectionFactory connectionFactory;
-  private ActiveMQConnection amqConnection;
+  //private ActiveMQConnectionFactory connectionFactory;
+  //private ActiveMQConnection amqConnection;
   private MessagingManager jmsMan;
 
   //@EJB(beanName = "ScheduledTimerBean")
@@ -134,12 +134,11 @@ public class ContextListener implements ServletContextListener,
         values.put("zoneid", zid);
         StrSubstitutor sub = new StrSubstitutor(values, "%{", "}");
         value = sub.replace(value);
-
       }
       p.setProperty(key, value);
     }
     sco.setSubdomain(p.getProperty("subdomain", ""));
-    //store persistence factory context
+    //store persistence factory context, required in this phase for MessagingManager!
     ctx.setAttribute("EntityManagerFactory", emf);
 
     InitialContext ic;

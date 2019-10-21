@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Properties;
 import java.util.logging.Logger;
-import javax.faces.context.FacesContext;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

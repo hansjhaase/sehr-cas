@@ -24,11 +24,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
-//import javax.jms.Message;
-import javax.jms.MessageProducer;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.apache.activemq.camel.component.ActiveMQComponent;
@@ -42,7 +39,6 @@ import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
-//import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.RouteDefinition;
@@ -55,8 +51,8 @@ import org.ifeth.sehr.p1507291734.web.beans.XNetProcessRootBean;
 import org.ifeth.sehr.p1507291734.web.beans.XNetZoneRoutingBean;
 
 /**
- * Send messages to XNET message bus and listen to queue on the bus of the zone
- * this module is responsible for.
+ * Send messages to XNET message bus and listen to the queue on the bus of the
+ * zone this module is responsible for.
  *
  * <p>
  * This module uses ApacheCamel for processing and routing. So there is no
@@ -105,7 +101,7 @@ public class XNetMessaging {
   }
 
   /**
-   * Use this to initialize a listener to get messages via SEHR Messaging bus.
+   * Initialize listener to get messages via SEHR Messaging bus.
    *
    * The XNET listener allows zone-to-zone data transfers.
    *
@@ -272,23 +268,36 @@ public class XNetMessaging {
     this.camelContext = new DefaultCamelContext();
     //connect parent/top level XNET broker ...
     if (!StringUtils.isBlank(xnetRootURL)) {
-      this.camelContext.addComponent("xroot", activeMQComponent(xnetRootURL));
+      ActiveMQComponent mqCompRoot = new ActiveMQComponent();
+      mqCompRoot.setBrokerURL(xnetRootURL);
+      mqCompRoot.setUserName(p.getProperty("sehrxnetrootuser", "sehruser"));
+      mqCompRoot.setPassword(p.getProperty("sehrxnetrootpw", "user4sehr"));
+      this.camelContext.addComponent("xroot", mqCompRoot);
     }
     //connect national XNET broker ...
     if (!StringUtils.isBlank(xnetCountryURL)) {
-      this.camelContext.addComponent("xctry", activeMQComponent(xnetCountryURL));
+      ActiveMQComponent mqCompCtry = new ActiveMQComponent();
+      mqCompCtry.setBrokerURL(xnetCountryURL);
+      mqCompCtry.setUserName(p.getProperty("sehrxnetcountryuser", "sehruser"));
+      mqCompCtry.setPassword(p.getProperty("sehrxnetcountrypw", "user4sehr"));
+      this.camelContext.addComponent("xctry", mqCompCtry);
     }
     //connect upper level XNET broker ...
-    this.camelContext.addComponent("xdom", activeMQComponent(xnetDomainURL));
+    ActiveMQComponent mqCompDom = new ActiveMQComponent();
+    mqCompDom.setBrokerURL(xnetDomainURL);
+    mqCompDom.setUserName(p.getProperty("sehrxnetdomainuser", "sehruser"));
+    mqCompDom.setPassword(p.getProperty("sehrxnetdomainpw", "user4sehr"));
+    this.camelContext.addComponent("xdom", mqCompDom);
     //connect local XNET broker ...
-    this.camelContext.addComponent("xzone", activeMQComponent(xnetZoneURL));
+    ActiveMQComponent mqCompZone = new ActiveMQComponent();
+    mqCompZone.setBrokerURL(xnetZoneURL);
+    mqCompZone.setUserName(p.getProperty("sehrxnetzoneuser", "sehruser"));
+    mqCompZone.setPassword(p.getProperty("sehrxnetzonepw", "user4sehr"));
+    this.camelContext.addComponent("xzone", mqCompZone);
     //+"vm://localhost?broker.persistent=false"));
     try {
-      //this.xnetParentCon = (ActiveMQConnection) this.xnetParentAMQFactory.createConnection(p.getProperty("sehrxnetuser"), p.getProperty("sehrxnetpw"));
-      //this.xnetLocalCon = (ActiveMQConnection) this.xnetLocalAMQFactory.createConnection(p.getProperty("activemquser"), p.getProperty("activemqpw"));
       XNetRoutes routes = new XNetRoutes(this.camelContext, this.p);
       routes.setCountry(this.country); //country this zone is assigned to...
-      //routes.setXNetLocal(this.queueXNetLocal);
       this.camelContext.addRoutes(routes);
       this.camelContext.setTracing(true);
       this.camelContext.setAutoStartup(true);
@@ -484,33 +493,33 @@ public class XNetMessaging {
       if (StringUtils.isNotBlank(p.getProperty("sehrxnetrooturl", ""))) {
         ActiveMQComponent amqCompXRoot = (ActiveMQComponent) this.camelContext.getComponent("xroot");
         ActiveMQConfiguration amqConfXRoot = (ActiveMQConfiguration) amqCompXRoot.getConfiguration();
-        boolean bOutOnly=true;
+        boolean bOutOnly = true;
         for (Route r : this.camelContext.getRoutes()) {
-        //String id = r.getId();
+          //String id = r.getId();
           String from = r.getRouteContext().getFrom().getUri();
-          if(from.contains("xroot")){
-            bOutOnly=false;
+          if (from.contains("xroot")) {
+            bOutOnly = false;
           }
         }
         sb.append("- XNET Root Bus     : ")
                 .append(amqConfXRoot.getBrokerURL())
-                .append(bOutOnly?" [OUT]":" [IN/OUT]")
+                .append(bOutOnly ? " [OUT]" : " [IN/OUT]")
                 .append(crlf);
       }
       if (StringUtils.isNotBlank(p.getProperty("sehrxnetcountryurl", ""))) {
         ActiveMQComponent amqCompXCL = (ActiveMQComponent) this.camelContext.getComponent("xctry");
         ActiveMQConfiguration amqConfXCL = (ActiveMQConfiguration) amqCompXCL.getConfiguration();
-        boolean bOutOnly=true;
+        boolean bOutOnly = true;
         for (Route r : this.camelContext.getRoutes()) {
-        //String id = r.getId();
+          //String id = r.getId();
           String from = r.getRouteContext().getFrom().getUri();
-          if(from.contains("xctry")){
-            bOutOnly=false;
+          if (from.contains("xctry")) {
+            bOutOnly = false;
           }
         }
         sb.append("- XNET Country '" + p.getProperty("country", "de") + "' Bus : ")
                 .append(amqConfXCL.getBrokerURL())
-                .append(bOutOnly?" [OUT]":" [IN/OUT]")
+                .append(bOutOnly ? " [OUT]" : " [IN/OUT]")
                 .append(crlf);
       }
       if (this.camelContext.hasComponent("xdom") != null) {
@@ -748,7 +757,7 @@ public class XNetMessaging {
           from("xroot:queue:" + this.queueXNetRoot)
                   .log("(xroot) ${in.headers}")
                   .bean(XNetProcessRootBean.class);
-          
+
         }
       }
       if (this.cc.getComponent("xctry") != null) {

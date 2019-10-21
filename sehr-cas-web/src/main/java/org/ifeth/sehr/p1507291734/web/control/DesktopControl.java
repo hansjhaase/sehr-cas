@@ -23,9 +23,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -43,9 +41,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.model.RouteDefinition;
@@ -53,7 +48,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.ifeth.sehr.intrasec.entities.NetCenter;
 import org.ifeth.sehr.p1507291734.ejb.CenterAdmin;
 import org.ifeth.sehr.p1507291734.web.MessagingManager;
-import org.ifeth.sehr.p1507291734.web.listener.SAFQueueListener;
 import org.ifeth.sehr.p1507291734.web.listener.XNetMessaging;
 import org.ifeth.sehr.p1507291734.web.model.XNetMessagingHandler;
 
@@ -212,7 +206,7 @@ public class DesktopControl implements Serializable, Converter {
   }
 
   public void doSelect(Route r) {
-    Log.info(DesktopControl.class.getName() + ":doSelect():r=" + r);
+    Log.fine(DesktopControl.class.getName() + ":doSelect():r=" + r);
     this.route = r;
     if (this.route != null) {
       FacesContext.getCurrentInstance().addMessage(null,

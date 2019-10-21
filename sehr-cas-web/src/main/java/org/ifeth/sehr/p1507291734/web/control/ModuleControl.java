@@ -92,7 +92,7 @@ public class ModuleControl implements Serializable {
   private PropertyBean pBean;
 
   @Inject
-  private ServletContext ctx;
+  private ServletContext sctx;
 
   /**
    * Creates a new instance of ModuleControl
@@ -126,7 +126,7 @@ public class ModuleControl implements Serializable {
 //        Log.severe(ModuleControl.class.getName() + ":init():" + e.getMessage());
 //      }
     }
-    if (ctx.getAttribute("EventBus") == null) {
+    if (sctx.getAttribute("EventBus") == null) {
       //Configure EventBus for app wide publish/subscribe
       this.eventBus = new EventBus();
       //this.pfEventBus = EventBusFactory.getDefault().eventBus();
@@ -134,7 +134,7 @@ public class ModuleControl implements Serializable {
       pfEventBus = EventBusFactory.getDefault().eventBus();
       evtProcessor.setWEBSocketProcessor(this.pfEventBus);
       eventBus.register(evtProcessor);
-      ctx.setAttribute("EventBus", this.eventBus);
+      sctx.setAttribute("EventBus", this.eventBus);
       Log.info(ModuleControl.class.getName() + "EventBus initialized ...");
     }
   }
@@ -318,9 +318,9 @@ public class ModuleControl implements Serializable {
   }
 
   public String getLocalAMQBrokerURL() {
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     ActiveMQConnectionFactory amqcf = (ActiveMQConnectionFactory) sctx.getAttribute("ActiveMQConnectionFactory");
     String brokerURL = "n/a";
     if (amqcf != null) {
@@ -331,9 +331,9 @@ public class ModuleControl implements Serializable {
 
   public String getXNetStatus() {
     String info = "<span style='color:red;font-weight:bold;'>- no XNET connection -</span>";
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     XNetMessaging xnetMessaging = (XNetMessaging) sctx.getAttribute("XNetMessaging");
     if (xnetMessaging != null) {
       info = xnetMessaging.getInfo(true); //true=as HTML
@@ -343,9 +343,9 @@ public class ModuleControl implements Serializable {
 
   public String getStatus() {
     String info;
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     XNetMessaging xnetMessaging = (XNetMessaging) sctx.getAttribute("XNetMessaging");
     if (xnetMessaging != null) {
       if (xnetMessaging.getEISContext() != null) {
@@ -355,9 +355,9 @@ public class ModuleControl implements Serializable {
       }
     } else {
       String ehndomain = getDomain(); //health networking domain
-      //A SEHR based network (operated by IFETH) ends with 'e-hn.org'
-      //by convention. A national SEHR based network ends with 
-      //2 letters '[countrycode].e-hn.org', e.g. 'de.e-hn.org'.
+      //By convention a SEHR based network operated by IFETH ends with 'e-hn.org'
+      //A national SEHR based network is prefixed with 2 letters:
+      //'[countrycode].e-hn.org', e.g. 'de.e-hn.org'
       //A private/local provider can use 'my.network.org' or 'my.de.e-hn.org' 
       //if he operates a subnet.
       if (StringUtils.isBlank(ehndomain)) {
@@ -382,9 +382,9 @@ public class ModuleControl implements Serializable {
   }
 
   public boolean isAMQConnected() {
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     ActiveMQConnection amqCon = (ActiveMQConnection) sctx.getAttribute("ActiveMQConnection");
     if (amqCon != null) {
       return amqCon.isStarted();
@@ -393,9 +393,9 @@ public class ModuleControl implements Serializable {
   }
 
   public boolean isLocalServiceQueueActive() {
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     ActiveMQConnection amqCon = (ActiveMQConnection) sctx.getAttribute("ActiveMQConnection");
     if (amqCon != null && amqCon.isStarted()) {
       int zoneid = Integer.parseInt(p.getProperty("zoneid", "0000000"));
@@ -410,9 +410,9 @@ public class ModuleControl implements Serializable {
   }
 
   public boolean isXNetConnected() {
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     XNetMessaging xnetMessaging = (XNetMessaging) sctx.getAttribute("XNetMessaging");
     Log.log(Level.INFO, "{0}:isXNetConnected():{1}", new Object[]{ModuleControl.class.getName(), xnetMessaging != null ? xnetMessaging.toString() : "No XNetMessaging instance"});
     if (xnetMessaging != null) {
@@ -422,9 +422,9 @@ public class ModuleControl implements Serializable {
   }
 
   public String startXNet() {
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext sctx = (ServletContext) ectx.getContext();
+    //FacesContext fctx = FacesContext.getCurrentInstance();
+    //ExternalContext ectx = fctx.getExternalContext();
+    //ServletContext sctx = (ServletContext) ectx.getContext();
     String content = "";
     XNetMessaging xnetMessenger = (XNetMessaging) sctx.getAttribute("XNetMessaging");
     //grabbed from XNetService servlet ;)
@@ -433,7 +433,7 @@ public class ModuleControl implements Serializable {
       content += xnetMessenger.getInfo(true);
     } else {
       if (!p.containsKey("sehrxnetdomainurl")) {
-        content = "SEHR XNet domain host not defined (sehrxnetdomainurl)<br/>";
+        content = "SEHR XNet domain host not defined (sehrxnetdomainurl)<br/>\n";
       } else {
         //queue to send out messages (EHNDomain), e.g. 'de.e-hn.org'
         String domain = p.getProperty("domain", "");
@@ -444,7 +444,7 @@ public class ModuleControl implements Serializable {
 
         String localDomain = subdomain + "." + domain;
         if (StringUtils.isBlank(subdomain)) {
-          content += "Configuration Error: 'subdomain' must be a country code like 'de' or a valid zone domain name like 'z[ZID]'<br/>";
+          content += "Configuration Error: 'subdomain' must be a country code like 'de' or a valid zone domain name like 'z[ZID]'\n<br/>";
         } else if (StringUtils.isBlank(domain)) {
           content += "Configuration Error: 'domain' must be a valid domain name like 'e-hn.org'<br/>";
           //} else if (localDomain.equalsIgnoreCase(p.getProperty("domain", ""))) {
@@ -537,6 +537,40 @@ public class ModuleControl implements Serializable {
       Logger.getLogger(ModuleControl.class.getName()).log(Level.WARNING, ex.getMessage());
     } catch (IOException ex) {
       Logger.getLogger(ModuleControl.class.getName()).log(Level.WARNING, ex.getMessage());
+    }
+    return false;
+  }
+
+  public boolean isInternetAvailable() {
+    return isHostAvailable("google.com");
+    // || isHostAvailable("paypal.com")
+    // || isHostAvailable("de.e-hn.org")
+  }
+
+  public boolean isHostAvailable(String hostName) {
+//+++ socket is returning true even server is not reachable
+//    try (Socket socket = new Socket()) {
+//      InetAddress inetAddr = InetAddress.getByName(hostName);
+//      InetSocketAddress socketAddress = new InetSocketAddress(inetAddr, 80);
+//      socket.connect(socketAddress, 1000);
+//      //check but do nothing else
+//      socket.close();
+//      return true;
+//    } catch (UnknownHostException | SocketTimeoutException ex) {
+//      Logger.getLogger(SessionControl.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+//    } catch (IOException ex) {
+//      Logger.getLogger(SessionControl.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+//    }
+    Runtime runtime = Runtime.getRuntime();
+    Process proc;
+    try {
+      proc = runtime.exec("ping -c 1 " + hostName);
+      int mPingResult = proc.waitFor();
+      if (mPingResult == 0) {
+        return true;
+      }
+    } catch (IOException | InterruptedException ex) {
+      Logger.getLogger(SessionControl.class.getName()).log(Level.SEVERE, null, ex);
     }
     return false;
   }

@@ -47,7 +47,7 @@ public class MessagingManager {
 
   private static MessagingManager instance = null;
   private final ServletContext ctx;
-  private final EventBus eventBus;
+  private EventBus eventBus = null;
 
   private Properties p;
   private int zoneid = 9999999; //testing only!
@@ -58,7 +58,9 @@ public class MessagingManager {
   protected MessagingManager(ServletContext ctx) {
     // Exists only to defeat instantiation.
     this.ctx = ctx;
-    this.eventBus = (EventBus) ctx.getAttribute("EventBus");
+    if (ctx != null) {
+      this.eventBus = (EventBus) ctx.getAttribute("EventBus");
+    }
   }
 
   public static MessagingManager getInstance(ServletContext ctx) {
@@ -127,18 +129,18 @@ public class MessagingManager {
    * @return
    */
   private boolean initJMS() {
-
-    amqconnection = (ActiveMQConnection) ctx.getAttribute("ActiveMQConnection");
-    if (amqconnection != null && !amqconnection.isClosed()) {
-      try {
-        amqconnection.close();
-      } catch (Exception ex) {
-        Log.log(Level.SEVERE, MessagingManager.class.getName() + ":initJMS():Error closing existing connection:{0}", ex.toString());
+    if (this.ctx != null) {
+      amqconnection = (ActiveMQConnection) ctx.getAttribute("ActiveMQConnection");
+      if (amqconnection != null && !amqconnection.isClosed()) {
+        try {
+          amqconnection.close();
+        } catch (Exception ex) {
+          Log.log(Level.SEVERE, MessagingManager.class.getName() + ":initJMS():Error closing existing connection:{0}", ex.toString());
+        }
+        ctx.setAttribute("ActiveMQConnection", null);
+        ctx.setAttribute("ActiveMQConnectionFactory", null);
       }
-      ctx.setAttribute("ActiveMQConnection", null);
-      ctx.setAttribute("ActiveMQConnectionFactory", null);
     }
-
     //--- using the properties file from WEB-INF...
     //String url = p.getProperty("activemqurl");
     //changed 12/2015
@@ -155,7 +157,6 @@ public class MessagingManager {
       jmsconnection = connectionFactory.createConnection(p.getProperty("sehrxnetzoneuser"), p.getProperty("sehrxnetzonepw"));
       //amqConnection = ActiveMQConnectionFactory.createActiveMQConnection((String)p.getProperty("activemqUser"), (String)p.getProperty("activemqPw"));
       amqconnection = (ActiveMQConnection) jmsconnection;
-
     } catch (Exception ex) {
       Log.log(Level.SEVERE, MessagingManager.class.getName() + ":initJMS():Init JMS Error:{0}", ex.toString());
       return false;
@@ -194,12 +195,12 @@ public class MessagingManager {
       Log.log(Level.SEVERE, MessagingManager.class.getName() + ":initJMS():JMS Error:{0}", ex.toString());
       return false;
     }
-
+    if (ctx != null) {
     //--- by team decision: the recommended way to track instances 
-    //track the local broker for zone based messaging
-    ctx.setAttribute("ActiveMQConnection", amqconnection);
-    ctx.setAttribute("ActiveMQConnectionFactory", connectionFactory);
-
+      //track the local broker for zone based messaging
+      ctx.setAttribute("ActiveMQConnection", amqconnection);
+      ctx.setAttribute("ActiveMQConnectionFactory", connectionFactory);
+    }
     //--- connection should be open but may not started at this point
     return (!amqconnection.isClosed());
   }
@@ -208,6 +209,10 @@ public class MessagingManager {
     if (amqconnection != null && !amqconnection.isClosed()) {
       try {
         amqconnection.close();
+        if(ctx!=null){
+          ctx.setAttribute("ActiveMQConnection", null);
+        }
+        //ctx.setAttribute("ActiveMQConnectionFactory", null);
         Log.log(Level.INFO, MessagingManager.class.getName() + ":close():Messaging connection closed.");
       } catch (JMSException ex) {
         Log.log(Level.SEVERE, MessagingManager.class.getName() + ":close():JMS error {0}", ex.getMessage());

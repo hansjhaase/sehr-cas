@@ -17,7 +17,7 @@
         <p:toolbar>
           <f:facet name="left">
             <p:commandButton value="Add" 
-                             actionListener="#{zoneViewCtrl.doPrepareNewZoneObject}" 
+                             actionListener="#{zoneViewCtrl.alPrepareNewZoneObject}" 
                              icon="ui-icon-document" 
                              update="grwlViewZones :frmViewZones:dlgEditZone" 
                              oncomplete="PF('widEditZone').show();"/> 
@@ -29,7 +29,7 @@
 
           <f:facet name="right">
             <p:menuButton value="Options">
-              <p:menuitem value="New" actionListener="#{zoneViewCtrl.doPrepareNewZoneObject}" 
+              <p:menuitem value="New" actionListener="#{zoneViewCtrl.alPrepareNewZoneObject}" 
                           update="grwlViewZones :frmViewZones:dlgEditZone" 
                           oncomplete="PF('widEditZone').show();" icon="ui-icon-disk" />
               <p:menuitem value="Close" icon="ui-icon-close" 
@@ -50,7 +50,7 @@
           messages with other communities of care using the SEHR XNET infrastructure.
         </p>
         <p:dataTable id="dataViewZones" value="#{zoneViewCtrl.registeredZones}" 
-                     var="zone" 
+                     var="zone" rowIndexVar="rowIndex"
                      paginator="true" paginatorPosition="bottom" rows="10">
           <p:column style="width:16px;">
             <p:rowToggler />
@@ -90,9 +90,18 @@
           </p:column>
           <p:column id="colStatusWEB" headerText="" width="18" style="padding:1px;">
             <p:outputPanel rendered="#{not zoneViewCtrl.isLocalZone(zone.zoneid)}">
+              <!--
               <p:graphicImage library="images" name="#{empty(fn:trim(zone.priip))?'cancel16x16.png':'important16x16.png'}" 
-                              title="#{empty(fn:trim(zone.priip))?'No IP address! Check configuration.':'No access to '.concat(fn:trim(zone.priip)).concat(':8080/sehr-cas-web')}" 
-                              rendered="#{empty(zone.priip) or not zoneViewCtrl.isSEHRWeb(zone)}"/>
+                              title="#{empty(fn:trim(zone.priip))?'No IP address! Check configuration.':'No access to '.concat(fn:trim(zone.priip))}" 
+                              rendered="#{empty(zone.priip)}"/>
+              -->
+              <!-- FIXME it takes to long if checking all by 'or not zoneViewCtrl.isSEHRWeb(zone)' -->
+              <p:graphicImage library="images" name="#{zoneViewCtrl.getImgStatus(zone)}" 
+                              title="" 
+                              rendered="#{not empty(zone.priip)}"/>
+              <p:graphicImage library="images" name="cancel16x16.png" 
+                              title="No IP address! Check configuration" 
+                              rendered="#{empty(zone.priip)}"/>
             </p:outputPanel>
             <p:outputPanel rendered="#{zoneViewCtrl.isLocalZone(zone.zoneid)}">
               <p:graphicImage library="images" name="home_16x16.png" 
@@ -119,10 +128,12 @@
               <f:setPropertyActionListener value="#{zone}" target="#{sessionControl.zoneObject}" />
               <f:setPropertyActionListener value="#{null}" target="#{sessionControl.netCenter}" />
             </p:commandButton>
-            <p:commandButton actionListener="#{zoneViewCtrl.doCheckRegistration(zone)}"
-                             update=":frmViewZones:grwlViewZones" 
+            <p:commandButton actionListener="#{zoneViewCtrl.alCheckRegistration}"
+                             update=":frmViewZones:grwlViewZones :frmViewZones:dataViewZones:@row(#{rowIndex})" 
                              delay="500"
                              icon="ui-icon-script" title="Check URL access, SEHR context entry and more...">
+              <f:attribute name="rowId" value="#{rowIndex}"/>
+              <f:attribute name="NetZones" value="#{zone}"/>
             </p:commandButton>
           </p:column>
           <p:rowExpansion>

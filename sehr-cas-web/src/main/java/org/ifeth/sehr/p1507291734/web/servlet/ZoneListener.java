@@ -100,71 +100,27 @@ public class ZoneListener extends HttpServlet {
       access = true;
     }
     String queue = null;
-    ActiveMQConnection amqConnection = (ActiveMQConnection) sctx.getAttribute("ActiveMQConnection");
+    ActiveMQConnection amqConnection = null;
     if (!access) {
       outInfo += "<p>Use <a href='" + request.getContextPath() + "/index.jsp'>main site</a> or known moduleOwner settings with" + request.getContextPath() + "/ZoneListener?action=...&username=...&password=...'</p>";
-    } else if (amqConnection == null || amqConnection.isClosed()) {
-      outInfo = "<p style='color:red;font-family:bold;'>ZoneListener: Error - no local messaging service!</p>";
-      outInfo += "<p style='color:blue;'>Check settings and/or start Apache MQ...</p>";
     } else {
       String action = request.getParameter("action");
       //commands: start, stop, restart, info
       outInfo = "<p>ZoneListener: Unknown command.</p>";
       if (action != null) {
-        Map<String, SAFQueueListener> safListeners = (HashMap) sctx.getAttribute("SAFQueueListener");
-        String zid = request.getParameter("zoneid");
-        //by default the service queue of the zone of this SEHR-CAS host
-        int zoneid = Integer.parseInt(p.getProperty("zoneid", "0000000"));
-        if (zid != null && zid.matches("\\d+")) {
-          zoneid = Integer.parseInt(zid);
-        }
-        SAFQueueListener serviceListener;
         MessagingManager jmsMan = MessagingManager.getInstance(sctx);
-        //'0000000' is not a valid zone id!
-        if (zoneid > 0) {
-          queue = "sehr." + String.format("%07d", zoneid) + ".service.queue";
-        } else {
-          outInfo = "<p style='color:red;font-family:bold;'>ZoneListener: Error - " + String.format("%07d", zoneid) + " is not a valid zone!</p>";
-        }
-        if (action.equalsIgnoreCase("start") && StringUtils.isNotBlank(queue)) {
-          if (queue != null && safListeners.containsKey(queue)) {
-            serviceListener = (SAFQueueListener) safListeners.get(queue);
-            serviceListener.stop();
-            safListeners.remove(queue);
-            outInfo = "<p>Message processing on '" + queue + "' has been stopped for restart. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
-          }
-          if (!jmsMan.isConnected()) {
-            outInfo += "<p>No connection to '" + jmsMan.toString() + "' has been stopped for restart. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
-
-          }
-          serviceListener = new SAFQueueListener();
-          if (serviceListener.configure(sctx, queue)) {
-            safListeners.put(queue, serviceListener);
-            logger.log(Level.INFO, ":processRequest():Message processing on '" + queue + "' started / URL=" + amqConnection.getBrokerInfo().getBrokerURL());
-            outInfo = "<p>Message processing on '" + queue + "' has been started. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
-          } else {
-            outInfo = "<p>Error: Listening on '" + queue + "' failed. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
-          }
-        } else if (action.equalsIgnoreCase("stop") && StringUtils.isNotBlank(queue)) {
-          if (safListeners.containsKey(queue)) {
-            serviceListener = (SAFQueueListener) safListeners.get(queue);
-            serviceListener.stop();
-            safListeners.remove(queue);
-            outInfo = "<p>Message processing on '" + queue + "' has been stopped. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
-          } else {
-            outInfo = "<p>'" + queue + "' not in list / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
-          }
-        } else if (action.equalsIgnoreCase("restart")) {
+        if (action.equalsIgnoreCase("restart")) {
           //restart messaging and configured zone services
           if (!jmsMan.configure(p)) {
             logger.warning(ZoneListener.class.getName() + ":processRequest():JMS Service not available. See logs for details.");
             sctx.setAttribute("OutOfService", true);
+            outInfo = "<p>ZoneListener: Messaging could not be configured for ".concat(p.getProperty("zoneid", "0000000")).concat("</p>");
           } else {
             sctx.setAttribute("isJMSConnected", jmsMan.isConnected());
             //SAF zone service listener
             //...this SEHR CAS ist serving by property settings
             jmsMan.addServiceListener(p.getProperty("zoneid", "0000000"));
-            outInfo = "Service listener restarted for<br/>".concat(p.getProperty("zoneid", "0000000"));
+            outInfo = "ZoneListener listener restarted for<br/>".concat(p.getProperty("zoneid", "0000000"));
 
             //jmsMan.configureAdvMonitor("ConnectionAdvisory");
             HashMap<String, String> zoneAdvMap = (HashMap) sctx.getAttribute("ZoneAdv");
@@ -192,30 +148,79 @@ public class ZoneListener extends HttpServlet {
               outInfo = "Restarting service listener failed.<br/>";
             }
           }
-        } else if (action.equalsIgnoreCase("monitor")) {
-          try {
-            jmsMan.startAdvMonitor("ConnectionAdvisory");
-            outInfo = "Monitoring of connections started.<br/>";
-          } catch (GenericSEHRException ex) {
-            Logger.getLogger(ZoneListener.class.getName()).log(Level.INFO, null, ex.getMessage());
-            outInfo = "Monitoring already started.<br/>";
-          }
-        } else if (action.equalsIgnoreCase("info")) {
-          //ActiveMQConnection amqCon = (ActiveMQConnection) sctx.getAttribute("ActiveMQConnection");
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm z");
-          outInfo = "Local domain: " + p.getProperty("subdomain", "?sub?") + "." + p.getProperty("domain", "n/a") + "<br/>";
-          outInfo += "Local AMQ Messaging since: " + sdf.format(amqConnection.getTimeCreated()) + "<br/>";
-          outInfo += "SEHR XNET root (global bus) is: " + p.getProperty("sehrxnetroot", "n/a") + "<br/>";
-          XNetMessaging xnetMessenger = (XNetMessaging) sctx.getAttribute("XNetMessaging");
-          if (xnetMessenger != null) {
-            outInfo += xnetMessenger.getInfo(true);
-          } else {
-            outInfo += "<span style='color:red;'>No SEHR XNET messaging running!</span> ";
-            outInfo += "<a href='./XNet?action=start'>Klick</a> to start XNET now.<br/>";
-          }
-          //list is generated for all action use cases below 
         } else {
-          outInfo = "Use '" + request.getContextPath() + "?action=start&zoneid=[ZONEID]', '...stop&zoneid=[ZONEID]' or 'action=monitor|info'";
+          amqConnection = (ActiveMQConnection) sctx.getAttribute("ActiveMQConnection");
+          if (amqConnection == null || amqConnection.isClosed()) {
+            outInfo = "<p style='color:red;font-family:bold;'>ZoneListener: Error - no local messaging service!</p>";
+            outInfo += "<p style='color:blue;'>Check settings and/or start Apache MQ...</p>";
+          } else {
+            Map<String, SAFQueueListener> safListeners = (HashMap) sctx.getAttribute("SAFQueueListener");
+            String zid = request.getParameter("zoneid");
+            //by default the service queue of the zone of this SEHR-CAS host
+            int zoneid = Integer.parseInt(p.getProperty("zoneid", "0000000"));
+            if (zid != null && zid.matches("\\d+")) {
+              zoneid = Integer.parseInt(zid);
+            }
+            SAFQueueListener serviceListener;
+            //'0000000' is not a valid zone id!
+            if (zoneid > 0) {
+              queue = "sehr." + String.format("%07d", zoneid) + ".service.queue";
+            } else {
+              outInfo = "<p style='color:red;font-family:bold;'>ZoneListener: Error - " + String.format("%07d", zoneid) + " is not a valid zone!</p>";
+            }
+            if (action.equalsIgnoreCase("start") && StringUtils.isNotBlank(queue)) {
+              if (queue != null && safListeners.containsKey(queue)) {
+                serviceListener = (SAFQueueListener) safListeners.get(queue);
+                serviceListener.stop();
+                safListeners.remove(queue);
+                outInfo = "<p>Message processing on '" + queue + "' has been stopped for restart. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
+              }
+              if (!jmsMan.isConnected()) {
+                outInfo += "<p>No connection to '" + jmsMan.toString() + "' has been stopped for restart. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
+
+              }
+              serviceListener = new SAFQueueListener();
+              if (serviceListener.configure(sctx, queue)) {
+                safListeners.put(queue, serviceListener);
+                logger.log(Level.INFO, ":processRequest():Message processing on '" + queue + "' started / URL=" + amqConnection.getBrokerInfo().getBrokerURL());
+                outInfo = "<p>Message processing on '" + queue + "' has been started. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
+              } else {
+                outInfo = "<p>Error: Listening on '" + queue + "' failed. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
+              }
+            } else if (action.equalsIgnoreCase("stop") && StringUtils.isNotBlank(queue)) {
+              if (safListeners.containsKey(queue)) {
+                serviceListener = (SAFQueueListener) safListeners.get(queue);
+                serviceListener.stop();
+                safListeners.remove(queue);
+                outInfo = "<p>Message processing on '" + queue + "' has been stopped. / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
+              } else {
+                outInfo = "<p>'" + queue + "' not in list / Broker URL=" + amqConnection.getBrokerInfo().getBrokerURL() + "</p>";
+              }
+            } else if (action.equalsIgnoreCase("monitor")) {
+              try {
+                jmsMan.startAdvMonitor("ConnectionAdvisory");
+                outInfo = "Monitoring of connections started.<br/>";
+              } catch (GenericSEHRException ex) {
+                Logger.getLogger(ZoneListener.class.getName()).log(Level.INFO, null, ex.getMessage());
+                outInfo = "Monitoring already started.<br/>";
+              }
+            } else if (action.equalsIgnoreCase("info")) {
+              SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm z");
+              outInfo = "Local domain: " + p.getProperty("subdomain", "?sub?") + "." + p.getProperty("domain", "n/a") + "<br/>";
+              outInfo += "Local AMQ Messaging since: " + sdf.format(amqConnection.getTimeCreated()) + "<br/>";
+              outInfo += "SEHR XNET root (global bus) is: " + p.getProperty("sehrxnetroot", "n/a") + "<br/>";
+              XNetMessaging xnetMessenger = (XNetMessaging) sctx.getAttribute("XNetMessaging");
+              if (xnetMessenger != null) {
+                outInfo += xnetMessenger.getInfo(true);
+              } else {
+                outInfo += "<span style='color:red;'>No SEHR XNET messaging running!</span> ";
+                outInfo += "<a href='./XNet?action=start'>Klick</a> to start XNET now.<br/>";
+              }
+              //list is generated for all action use cases below 
+            } else {
+              outInfo = "Use '" + request.getContextPath() + "?action=start&zoneid=[ZONEID]', '...stop&zoneid=[ZONEID]' or 'action=monitor|info'";
+            }
+          }
         }
       } else {
         outInfo = "Use '" + request.getContextPath() + "?action=start&zoneid=[ZONEID]', '...stop&zoneid=[ZONEID]' or 'action=monitor|info'";
@@ -234,7 +239,7 @@ public class ZoneListener extends HttpServlet {
         Map<String, SAFQueueListener> mAppList = (HashMap) sctx.getAttribute("SAFQueueListener");
         if (!mAppList.isEmpty()) {
           for (String entry : mAppList.keySet()) {
-            out.println(entry);
+            out.println("* " + entry + "<br/>");
           }
         }
         out.println("<h2 style='font-size:12px;'>List of Connections</h2>");

@@ -1,5 +1,5 @@
 edit/use APG documents at
-RBK:Server-.3/
-Projekte/P0301010/engineering/doc-help-man/APG
+
+RBK:Server:Projekte/P0301010/engineering/doc-help-man/APG
 
 SEHR is OpenSource. So Copy edited documents to Sourceforge: sehr.sf.net

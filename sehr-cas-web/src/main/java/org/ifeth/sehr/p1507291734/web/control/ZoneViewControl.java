@@ -34,17 +34,23 @@ import org.ifeth.sehr.p1507291734.lib.LoggerUtility;
 import org.ifeth.sehr.p1507291734.web.Constants;
 import com.google.gson.Gson;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
+import javax.faces.event.ActionEvent;
 import org.ifeth.sehr.intrasec.entities.AdrMain;
 //import org.ifeth.sehr.intrasec.entities.NetCenter;
 import org.ifeth.sehr.p1507291734.ejb.AdrMainAdmin;
 //import org.ifeth.sehr.p1507291734.web.beans.GeoLocation;
 import org.primefaces.event.SelectEvent;
 import javax.faces.view.ViewScoped;
+import javax.servlet.GenericServlet;
+import javax.ws.rs.core.Context;
 import org.ifeth.sehr.core.exception.ObjectHandlerException;
 import org.ifeth.sehr.core.lib.DeSerializer;
 import org.ifeth.sehr.core.objects.GeoLocation;
 import static org.ifeth.sehr.p1507291734.web.control.CenterViewControl.readJsonFromUrl;
+import org.primefaces.context.RequestContext;
 import org.primefaces.json.JSONException;
 import org.primefaces.json.JSONObject;
 
@@ -59,26 +65,31 @@ public class ZoneViewControl implements Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final Logger Log = Logger.getLogger("org.ifeth.p1507291734.web");
-  private static final String MONITORCFG = "/WEB-INF/ZoneAdv.map";
+  //private static final String MONITORCFG = "/WEB-INF/ZoneAdv.map";
   private static final Gson GJson = new Gson();
-
+  
   @EJB
   private ZoneAdmin ejbZoneAdmin;
   @EJB
   private AdrMainAdmin ejbAdrMainAdmin;
-
+  
+  @Inject
+  private ServletContext sctx;
   @Inject
   private SessionControl sessionCtrl;
   @Inject
   private ModuleControl moduleCtrl;
+
   private int zoneid;
   private NetZones netZones;
   private List<NetZones> lstNetZones;
   private AdrMain adrResp; //responsible person/organization of the zone
   private int respOrgAdrId = -1;
   private GeoLocation geoData;
-  //============================================= constructors, initialization
+  private List<NetZones> lMonitored = null;
+  private List<NetZones> lMonitorFlag = new ArrayList<>();
 
+  //============================================= constructors, initialization
   public ZoneViewControl() {
   }
 
@@ -88,6 +99,16 @@ public class ZoneViewControl implements Serializable {
     lstNetZones = new ArrayList<>();
     int debug = moduleCtrl.getDebugMode();
     LoggerUtility.assignLevelByDebug(debug, Log);
+    lMonitored = sessionCtrl.listMonitoredZones(true);
+    //ServletContext sctx = (ServletContext) FacesContext.getCurrentInstance().getExternalContext().getContext();
+    Map<String, String> zoneAdvMap = (HashMap) sctx.getAttribute("ZoneAdv");
+    if (zoneAdvMap != null) {
+      for (String zid : zoneAdvMap.keySet()) {
+        NetZones z = ejbZoneAdmin.readNetZonesByID(Integer.parseInt(zid));
+        //TODO checkif zone has been expired/stopped their services
+        lMonitorFlag.add(z);
+      }
+    }
   }
 
   //============================================= getter/setter
@@ -210,67 +231,86 @@ public class ZoneViewControl implements Serializable {
     FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Item Selected", "" + event.getObject()));
   }
 
-  public void doCheckRegistration(NetZones z) {
-    Log.finer(ZoneViewControl.class.getName() + ":doCheckRegistration()");
+  public void alCheckRegistration(ActionEvent ae) {
+    FacesContext fctx = FacesContext.getCurrentInstance();
+    Integer rowId = (Integer) ae.getComponent().getAttributes().get("rowId");
+    NetZones z = (NetZones) ae.getComponent().getAttributes().get("NetZones");
     if (z == null) {
+      Log.warning(ZoneViewControl.class.getName() + ":alCheckRegistration(rowId=" + rowId + "):NetZones is null");
+      //RequestContext.getCurrentInstance().update(":frmViewZones:dataViewZones:@row(" + rowId + ")");
       return;
     }
 
-    String grwlMessage = "Checking " + z.toString();
     int val = 0;
-    //int newval = val;
     if (sessionCtrl.statusNetZones().containsKey(z)) {
+      //get last check if present...
       val = sessionCtrl.statusNetZones().get(z);
+      if (val > 0) {
+        Log.fine(ZoneViewControl.class.getName() + ":alCheckRegistration(rowId=" + rowId + "):zone=" + z.toString() + ", val=" + Integer.toBinaryString(val));
+        fctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Status...", "already checked - " + (val == 0 ? "no connection" : "ok")));
+        //RequestContext.getCurrentInstance().update(":frmViewZones:dataViewZones:@row(" + rowId + ")");
+        return;
+      }
     }
-    //URL=bit0
-    if (isSEHRWebSSL(z)) {
-      val |= Constants.maskIsURLSEHRWebSSL;
-      grwlMessage += "<br/>URL via TLS/SSH";
-    } else {
-      val &= Constants.maskIsURLSEHRWebSSL;
-      grwlMessage += "<br/>URL is unsecure!";
-    }
-    Log.fine(ZoneViewControl.class.getName() + ":doCheckRegistration():zone=" + z.toString() + ", val=" + Integer.toBinaryString(val));
-    sessionCtrl.statusNetZones().put(z, val);
-    FacesContext fctx = FacesContext.getCurrentInstance();
+    //check again
+    //no TLS/SSL:bit0=1, TLS/SSL:bit2=1
+    val = checkStatusZone(z);
+    Log.fine(ZoneViewControl.class.getName() + ":alCheckRegistration(rowId=" + rowId + "):zone=" + z.toString() + ", val=" + Integer.toBinaryString(val));
+    String grwlMessage = "" + z.toString() + " checked:" + (val == 0 ? "no connection" : "connectable");
     fctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Status...", grwlMessage));
+    //RequestContext.getCurrentInstance().update(":frmViewZones:dataViewZones:@row(" + rowId + ")");
   }
 
   public boolean isLocalZone(Integer zid) {
     return zid != null && zid.equals(moduleCtrl.getLocalZoneID());
   }
 
-  public boolean isSEHRWeb(NetZones z) {
-    Log.info(ZoneViewControl.class.getName() + ":isSEHRWeb():" + z.toString());
+  public String getImgStatus(NetZones z) {
+    if (sessionCtrl.statusNetZones().containsKey(z)) {
+      int val = sessionCtrl.statusNetZones().get(z);
+      Log.finer(ZoneViewControl.class.getName() + ":getImgStatus():val=" + Integer.toBinaryString(val));
+      return (val > 0 ? "serv_on16x16.png" : "serv_off16x16.png");
+    }
+    //FIXME it takes too long
+    //if (checkStatusZone(z) > 0) {
+    //  return "serv_on16x16.png";
+    //}
+    return "blank16x16.png";
+  }
+
+  public boolean isSEHRWebStatus(NetZones z) {
+    Log.fine(ZoneViewControl.class.getName() + ":isSEHRWebStatus():" + z.toString());
 
     if (sessionCtrl.statusNetZones().containsKey(z)) {
       int val = sessionCtrl.statusNetZones().get(z);
-      Log.finer(ZoneViewControl.class.getName() + ":isSEHRWeb():val=" + Integer.toBinaryString(val));
-      return (val & Constants.maskIsURLSEHRWeb) == Constants.maskIsURLSEHRWeb;
+      Log.finer(ZoneViewControl.class.getName() + ":isSEHRWebStatus():val=" + Integer.toBinaryString(val));
+      return val > 0;
     }
+    //it takes to long
+    //if (checkStatusZone(z) > 0) {
+    //  return true;
+    //}
     return false;
   }
 
-  public void doDeleteEvent() {
+  public void doDeleteZone() {
     if (lstNetZones.contains(netZones)) {
-      //TODO remove from DB
-      lstNetZones.remove(netZones);
+      //remove from DB not allowed, inactivate only
+      //lstNetZones.remove(netZones);
     }
   }
 
-  public String doPrepareNewZoneObject() {
+  public void alPrepareNewZoneObject() {
     netZones = new NetZones();
-
-    return "pm:edit?transition=flip";
   }
 
   public String showZone() {
-    Log.info(ZoneViewControl.class.getName() + ":showZone():" + netZones.toString());
+    Log.fine(ZoneViewControl.class.getName() + ":showZone():" + netZones.toString());
     return "intern";
   }
 
   public List<NetZones> getRegisteredZones() {
-    Log.info(ZoneViewControl.class.getName() + ":getRegisteredZones()");
+    Log.fine(ZoneViewControl.class.getName() + ":getRegisteredZones()");
     return ejbZoneAdmin.listActiveZones();
   }
 
@@ -309,42 +349,58 @@ public class ZoneViewControl implements Serializable {
     if (z == null) {
       return "The status can't be determined (null)";
     }
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext ctx = (ServletContext) ectx.getContext();
-    Map<String, String> zoneAdvMap = (HashMap) ctx.getAttribute("ZoneAdv");
-    if (zoneAdvMap == null || !zoneAdvMap.containsKey(z.getZoneidstr())) {
-      return "The services of this zone (" + z.getZoneid() + ") are not monitored.";
+    /* +++ review: changed to contains ... is faster
+     FacesContext fctx = FacesContext.getCurrentInstance();
+     ExternalContext ectx = fctx.getExternalContext();
+     ServletContext ctx = (ServletContext) ectx.getContext();
+     Map<String, String> zoneAdvMap = (HashMap) ctx.getAttribute("ZoneAdv");
+     if (zoneAdvMap == null || !zoneAdvMap.containsKey(z.getZoneidstr())) {
+     return "The services of zone (" + z.getZoneid() + ") are not monitored.";
+     }
+     for (NetZones m : lMonitored) {
+     if (m.getZoneid().equals(z.getZoneid())) {
+     return "Service queue activated on this host.";
+     }
+     }
+     */
+    if (lMonitored.contains(z)) {
+      return "Service queue activated on this host.";
     }
-    List<NetZones> lMonitored = sessionCtrl.activeMonitoredZones(true);
-    for (NetZones m : lMonitored) {
-      if (m.getZoneid().equals(z.getZoneid())) {
-        return "Service queue activated on this host.";
-      }
+    if (lMonitorFlag.contains(z)) {
+      return "Service monitoring for " + z.getZoneid() + " marked but not yet started!";
     }
-    return "No monitoring on by this host. Applications that do require services interface may not working!";
+    return "No service monitoring by this host. Applications that do require services of " + z.getZoneid() + " may not work!";
   }
 
   public String getStatusImgMonitor(NetZones z) {
     if (z == null) {
       return "blank16x16.png";
     }
-    FacesContext fctx = FacesContext.getCurrentInstance();
-    ExternalContext ectx = fctx.getExternalContext();
-    ServletContext ctx = (ServletContext) ectx.getContext();
-    //1. check if zone is flagged to be served by this sehr-cas app
-    Map<String, String> zoneAdvMap = (HashMap) ctx.getAttribute("ZoneAdv");
-    if (zoneAdvMap == null || !zoneAdvMap.containsKey(z.getZoneidstr())) {
-      return "blank16x16.png";
+    /*
+     FacesContext fctx = FacesContext.getCurrentInstance();
+     ExternalContext ectx = fctx.getExternalContext();
+     ServletContext ctx = (ServletContext) ectx.getContext();
+     //check if zone is currently served (listening for requests)
+     List<NetZones> lMonitored = sessionCtrl.listMonitoredZones(true);
+     for (NetZones m : lMonitored) {
+     if (m.getZoneid().equals(z.getZoneid())) {
+     return "serv_on16x16.png";
+     }
+     }
+     //check if zone is flagged to be served by this sehr-cas app
+     Map<String, String> zoneAdvMap = (HashMap) ctx.getAttribute("ZoneAdv");
+     if (zoneAdvMap == null || !zoneAdvMap.containsKey(z.getZoneidstr())) {
+     return "blank16x16.png";
+     }
+    */
+    if (lMonitored.contains(z)) {
+      return "serv_on16x16.png";
     }
-    //2. check if zone is currently served (listening for requests)
-    List<NetZones> lMonitored = sessionCtrl.activeMonitoredZones(true);
-    for (NetZones m : lMonitored) {
-      if (m.getZoneid().equals(z.getZoneid())) {
-        return "serv_on16x16.png";
-      }
+    if (lMonitorFlag.contains(z)) {
+      return "serv_off16x16.png";
     }
-    return "serv_off16x16.png";
+
+    return "blank16x16.png";
   }
 
   public boolean hasPublicKey(NetZones z) {
@@ -374,12 +430,12 @@ public class ZoneViewControl implements Serializable {
    * @param z
    * @return
    */
-  public boolean isSEHRWebSSL(NetZones z) {
+  public boolean isSEHRWeb(NetZones z) {
     if (StringUtils.isBlank(z.getPriip())) {
       return false;
     }
     String httpUrl = "http://" + z.getPriip() + ":8080/sehr-cas-web/";
-    Log.info(ZoneViewControl.class.getName() + ":isSEHRWebSSL():testing HTTP URL:" + httpUrl);
+    Log.info(ZoneViewControl.class.getName() + ":isSEHRWeb():testing HTTP URL:" + httpUrl);
     StringBuilder sb = new StringBuilder();
     sb.append(httpUrl).append(": ");
     boolean stsUrl = moduleCtrl.isHTTPAccess(httpUrl);
@@ -478,11 +534,10 @@ public class ZoneViewControl implements Serializable {
 
   //============================================= private mthods
   //TODO move to SEHR Core
-
   private boolean isHostAvailable(String hostName, int port) {
     try (Socket socket = new Socket()) {
       InetSocketAddress socketAddress = new InetSocketAddress(hostName, port);
-      socket.connect(socketAddress, 3000);
+      socket.connect(socketAddress, 1000);
       //TODO check for sehr-cas or 24100 ;)
       socket.close();
       return true;
@@ -492,6 +547,30 @@ public class ZoneViewControl implements Serializable {
       Logger.getLogger(SessionControl.class.getName()).log(Level.SEVERE, null, ex);
     }
     return false;
+  }
+
+  private int checkStatusZone(NetZones z) {
+    Log.fine(SessionControl.class.getName() + ":checkStatusZone(" + z.getTitle() + ")");
+    if (z.getPriip() == null) {
+      return 0;
+    }
+    int val = 0;
+    if (moduleCtrl.isHTTPAccess("https://" + z.getPriip() + ":8181")) {
+      val = val | Constants.maskIsURLSEHRWebSSL;
+    } else {
+      if (moduleCtrl.isHTTPAccess("http://" + z.getPriip() + ":8080")) {
+        val = val | Constants.maskIsURLSEHRWeb;
+      } else {
+        if (moduleCtrl.isHostAvailable(z.getPriip())) {
+          val = val | Constants.maskIsURLSEHRWeb;
+        }
+      }
+    }
+    //TODO check and add LDAP status using mask
+
+    Log.finer(SessionControl.class.getName() + ":checkStatusZone():" + z.getTitle() + ",val=" + Integer.toBinaryString(val));
+    sessionCtrl.addStatusNetZones(z, val);
+    return val;
   }
 
 }
